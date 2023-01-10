@@ -1,8 +1,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "lepton/operations.h"
-#include "lepton/apuc.h"
+#include "gsi/lepton/apuc.h"
+#include "gsi/lepton/operations.h"
 
 lepton_wordline_t *lepton_right_in_place(lepton_wordline_t *lhs,
                                          lepton_wordline_t *rhs,

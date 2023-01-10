@@ -1,8 +1,8 @@
 #ifndef __LEPTON__OPERATIONS_H__
 #define __LEPTON__OPERATIONS_H__
 
-#include "lepton/constants.h"
-#include "lepton/apuc.h"
+#include "gsi/lepton/apuc.h"
+#include "gsi/lepton/constants.h"
 
 lepton_wordline_t *lepton_right_in_place(lepton_wordline_t *lhs,
                                          lepton_wordline_t *rhs,

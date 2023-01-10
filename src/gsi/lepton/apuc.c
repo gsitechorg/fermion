@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "lepton/operations.h"
-#include "lepton/apuc.h"
+#include "gsi/lepton/apuc.h"
+#include "gsi/lepton/operations.h"
 
 void lepton_plats_for_bank(size_t bank, size_t *lower_plat_apc_0,
                            size_t *upper_plat_apc_0, size_t *lower_plat_apc_1,

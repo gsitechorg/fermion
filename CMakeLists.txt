@@ -3,6 +3,8 @@ project(lepton LANGUAGES C)
 
 
 add_library(gsilepton
+    src/gsi/lepton/operations.c
+    src/gsi/lepton/apuc.c
     src/gsi/libgal.c
     src/gsi/libgvml.c
     src/gsi/libgdl.c

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "lepton/constants.h"
+#include "gsi/lepton/constants.h"
 
 #define LEPTON_FOREACH_RANGE_3(var, lower, upper, step_size, block) \
   for (size_t var = lower; var < upper; var += step_size) {         \
