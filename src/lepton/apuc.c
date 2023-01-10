@@ -1,0 +1,2333 @@
+#include <stdio.h>
+#include <string.h>
+
+#include "lepton/operations.h"
+#include "lepton/apuc.h"
+
+void lepton_plats_for_bank(size_t bank, size_t *lower_plat_apc_0,
+                           size_t *upper_plat_apc_0, size_t *lower_plat_apc_1,
+                           size_t *upper_plat_apc_1) {
+  // 1 low-order and 1 high-order half-bank per APC
+  // DIRI orders low- and high-order half-banks consecutively
+  // 2 APCs per APUC
+  // .:. Need to slice 2 ranges of 2 half-banks
+  *lower_plat_apc_0 = bank * LEPTON_NUM_PLATS_PER_HALF_BANK * 2;
+  *upper_plat_apc_0 = (bank + 1) * LEPTON_NUM_PLATS_PER_HALF_BANK * 2;
+  *lower_plat_apc_1 = (*lower_plat_apc_0) + LEPTON_NUM_PLATS_PER_APC;
+  *upper_plat_apc_1 = (*upper_plat_apc_0) + LEPTON_NUM_PLATS_PER_APC;
+}
+
+void lepton_patch_whole_vr(lepton_apuc_t *apuc, lepton_vr_patch_t *patch)
+{
+  lepton_vr_t *vr = patch->vr;
+  lepton_vr_t *update = patch->update;
+  if (update == NULL) {
+    lepton_init_vr(vr, false);
+  }
+  else {
+    lepton_foreach_vr_section(section, {
+      lepton_foreach_vr_plat(plat, {
+        (*vr)[section][plat] = (*update)[section][plat];
+      });
+    });
+  }
+}
+
+void lepton_patch_sb(lepton_apuc_t *apuc, lepton_wordline_map_t *patch)
+{
+  lepton_foreach_range(i, patch->size, {
+    lepton_wordline_patch_t *section_patch = &patch->updates[i];
+    lepton_vr_t *vr = (*section_patch).vr;
+    size_t section = (*section_patch).section;
+    lepton_wordline_t *update = (*section_patch).update;
+    lepton_foreach_vr_plat(plat, {
+      (*vr)[section][plat] = (*update)[plat];
+    });
+  });
+}
+
+void lepton_patch_gl(lepton_apuc_t *apuc, lepton_gl_t *patch)
+{
+  if (patch != NULL) {
+    lepton_foreach_gl_plat(plat, {
+      apuc->gl[plat] = (*patch)[plat];
+    });
+  }
+  else {
+    lepton_init_gl(&apuc->gl, false);
+  }
+}
+
+void lepton_patch_ggl(lepton_apuc_t *apuc, lepton_ggl_t *patch)
+{
+  if (patch != NULL) {
+    lepton_foreach_ggl_group(group, {
+      lepton_foreach_ggl_plat(plat, {
+        apuc->ggl[group][plat] = (*patch)[group][plat];
+      });
+    });
+  }
+  else {
+    lepton_init_ggl(&apuc->ggl, false);
+  }
+}
+
+void lepton_patch_lgl(lepton_apuc_t *apuc, lepton_lgl_t *patch)
+{
+  if (patch != NULL) {
+    lepton_foreach_lgl_plat(plat, {
+      apuc->lgl[plat] = (*patch)[plat];
+    });
+  }
+  else {
+    lepton_init_lgl(&apuc->lgl, false);
+  }
+}
+
+void lepton_patch_whole_l1(lepton_apuc_t *apuc,
+                           lepton_l1_t (*patch)[LEPTON_NUM_L1_ROWS])
+{
+  if (patch == NULL) {
+    lepton_foreach_l1_row(row, {
+      lepton_init_l1(&apuc->l1[row], false);
+    });
+  }
+  else {
+    lepton_foreach_l1_row(row, {
+      lepton_foreach_l1_group(group, {
+        lepton_foreach_l1_plat(plat, {
+          apuc->l1[row][group][plat] = (*patch)[row][group][plat];
+        });
+      });
+    });
+  }
+}
+
+void lepton_patch_l1(lepton_apuc_t *apuc, lepton_l1_patch_t *patch)
+{
+  size_t l1_addr = patch->l1_addr;
+  switch (patch->src) {
+  case L1_SRC_GGL: {
+    lepton_foreach_l1_group(group, {
+      lepton_foreach_l1_plat(plat, {
+        apuc->l1[l1_addr][group][plat] = patch->ggl_patch[group][plat];
+      });
+    });
+    break;
+  }
+  case L1_SRC_LGL: {
+    size_t bank = (l1_addr >> 11) & 0x3;
+    size_t group = (l1_addr >> 9) & 0x3;
+    size_t row = l1_addr & 0x1FF;
+    size_t lower_plat_apc_0;
+    size_t upper_plat_apc_0;
+    size_t lower_plat_apc_1;
+    size_t upper_plat_apc_1;
+    lepton_plats_for_bank(bank,
+                          &lower_plat_apc_0,
+                          &upper_plat_apc_0,
+                          &lower_plat_apc_1,
+                          &upper_plat_apc_1);
+    lepton_foreach_range(plat, lower_plat_apc_0, upper_plat_apc_0, {
+      apuc->l1[row][group][plat] = patch->lgl_patch[plat - lower_plat_apc_0];
+    });
+    lepton_foreach_range(plat, lower_plat_apc_1, upper_plat_apc_1, {
+      apuc->l1[row][group][plat] =
+        patch->lgl_patch[plat - lower_plat_apc_1
+                         + LEPTON_NUM_PLATS_PER_HALF_BANK * 2];
+    });
+    break;
+  }
+  }
+}
+
+void lepton_patch_whole_l2(lepton_apuc_t *apuc,
+                           lepton_l2_t (*patch)[LEPTON_NUM_L2_ROWS])
+{
+  if (patch == NULL) {
+    lepton_foreach_l2_row(row, {
+      lepton_init_l2(&apuc->l2[row], false);
+    });
+  }
+  else {
+    lepton_foreach_l2_row(row, {
+      lepton_foreach_l2_plat(plat, {
+        apuc->l2[row][plat] = (*patch)[row][plat];
+      });
+    });
+  }
+}
+
+void lepton_patch_l2(lepton_apuc_t *apuc, lepton_l2_patch_t *patch)
+{
+  size_t l2_addr = patch->l2_addr;
+  lepton_foreach_l2_plat(plat, {
+    apuc->l2[l2_addr][plat] = patch->update[plat];
+  });
+}
+
+void lepton_patch_rsp16(lepton_apuc_t *apuc, lepton_rsp16_t *patch)
+{
+  lepton_foreach_rsp16_section(section, {
+    lepton_foreach_rsp16_plat(plat, {
+      apuc->rsp16[section][plat] = (*patch)[section][plat];
+    });
+  });
+}
+
+void lepton_patch_partial_rsp16(lepton_apuc_t *apuc,
+                                lepton_rsp16_section_map_t *patch)
+{
+  lepton_foreach_range(i, patch->size, {
+    lepton_rsp16_section_patch_t *section_patch = patch->updates[i];
+    size_t section = section_patch->section;
+    lepton_rsp16_section_t *update = section_patch->update;
+    lepton_foreach_rsp16_plat(plat, {
+      apuc->rsp16[section][plat] = (*update)[plat];
+    });
+  });
+}
+
+void lepton_patch_rsp256(lepton_apuc_t *apuc, lepton_rsp256_t *patch)
+{
+  lepton_foreach_rsp256_section(section, {
+    lepton_foreach_rsp256_plat(plat, {
+      apuc->rsp256[section][plat] = (*patch)[section][plat];
+    });
+  });
+}
+
+void lepton_patch_rsp2k(lepton_apuc_t *apuc, lepton_rsp2k_t *patch)
+{
+  lepton_foreach_rsp2k_section(section, {
+    lepton_foreach_rsp2k_plat(plat, {
+      apuc->rsp2k[section][plat] = (*patch)[section][plat];
+    });
+  });
+}
+
+void lepton_patch_rsp32k(lepton_apuc_t *apuc, lepton_rsp32k_t *patch)
+{
+  lepton_foreach_rsp32k_section(section, {
+    lepton_foreach_rsp32k_plat(plat, {
+      apuc->rsp32k[section][plat] = (*patch)[section][plat];
+    });
+  });
+}
+
+void lepton_patch_rsps(lepton_apuc_t *apuc, lepton_rsp_patches_t *patches)
+{
+  if (patches != NULL && patches->rsp16_update != NULL) {
+    lepton_patch_rsp16(apuc, patches->rsp16_update);
+  }
+  else {
+    lepton_init_rsp16(&apuc->rsp16, false);
+  }
+
+  if (patches != NULL && patches->rsp256_update != NULL) {
+    lepton_patch_rsp256(apuc, patches->rsp256_update);
+  }
+  else {
+    lepton_init_rsp256(&apuc->rsp256, false);
+  }
+
+  if (patches != NULL && patches->rsp2k_update != NULL) {
+    lepton_patch_rsp2k(apuc, patches->rsp2k_update);
+  }
+  else {
+    lepton_init_rsp2k(&apuc->rsp2k, false);
+  }
+
+  if (patches != NULL && patches->rsp32k_update != NULL) {
+    lepton_patch_rsp32k(apuc, patches->rsp32k_update);
+  }
+  else {
+    lepton_init_rsp32k(&apuc->rsp32k, false);
+  }
+}
+
+void lepton_patch_noop(lepton_apuc_t *apuc, void *patch)
+{
+  // nothing to do, for now
+}
+
+void lepton_patch_rsp_end(lepton_apuc_t *apuc, void *patch)
+{
+  // nothing to do, for now
+}
+
+void lepton_patch_rsp_start_ret(lepton_apuc_t *apuc, void *patch)
+{
+  // nothing to do, for now
+}
+
+void lepton_patch_l2_end(lepton_apuc_t *apuc, void *patch)
+{
+  // nothing to do, for now
+}
+
+void lepton_patch_rwinh_set(lepton_apuc_t *apuc, uint16_t mask)
+{
+  apuc->rwinh_sects |= mask;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_foreach_vr_plat(plat, {
+      apuc->rwinh_filter[section][plat] = apuc->rl[section][plat];
+    });
+  });
+}
+
+void lepton_patch_rwinh_rst(lepton_apuc_t *apuc,
+                            lepton_rwinh_rst_patch_t *patch)
+{
+  if (!patch->has_read) {
+    lepton_foreach_masked_section(patch->mask, section, {
+      lepton_foreach_vr_plat(plat, {
+        apuc->rl[section][plat] = apuc->rwinh_filter[section][plat];
+      });
+    });
+  }
+
+  apuc->rwinh_sects &= ~patch->mask;
+  lepton_foreach_masked_section(~apuc->rwinh_sects, section, {
+    lepton_foreach_vr_plat(plat, {
+      apuc->rwinh_filter[section][plat] = true;
+    });
+  });
+}
+
+void lepton_init_vrs(lepton_vr_t (*vrs)[LEPTON_NUM_SBS], bool value)
+{
+  lepton_foreach_range(sb, LEPTON_NUM_SBS, {
+    lepton_init_vr(&(*vrs)[sb], value);
+  });
+}
+
+void lepton_init_vr(lepton_vr_t *vr, bool value)
+{
+  lepton_foreach_vr_section(section, {
+    lepton_foreach_vr_plat(plat, {
+      (*vr)[section][plat] = value;
+    });
+  });
+}
+
+void lepton_init_gl(lepton_gl_t *gl, bool value)
+{
+  lepton_foreach_gl_plat(plat, {
+    (*gl)[plat] = value;
+  });
+}
+
+void lepton_init_ggl(lepton_ggl_t *ggl, bool value)
+{
+  lepton_foreach_ggl_group(group, {
+    lepton_foreach_ggl_plat(plat, {
+      (*ggl)[group][plat] = value;
+    });
+  });
+}
+
+void lepton_init_rsp16(lepton_rsp16_t *rsp16, bool value)
+{
+  lepton_foreach_rsp16_section(section, {
+    lepton_foreach_rsp16_plat(plat, {
+      (*rsp16)[section][plat] = value;
+    });
+  });
+}
+
+void lepton_init_rsp256(lepton_rsp256_t *rsp256, bool value)
+{
+  lepton_foreach_rsp256_section(section, {
+    lepton_foreach_rsp256_plat(plat, {
+      (*rsp256)[section][plat] = value;
+    });
+  });
+}
+
+void lepton_init_rsp2k(lepton_rsp2k_t *rsp2k, bool value)
+{
+  lepton_foreach_rsp2k_section(section, {
+    lepton_foreach_rsp2k_plat(plat, {
+      (*rsp2k)[section][plat] = value;
+    });
+  });
+}
+
+void lepton_init_rsp32k(lepton_rsp32k_t *rsp32k, bool value)
+{
+  lepton_foreach_rsp32k_section(section, {
+    lepton_foreach_rsp32k_plat(plat, {
+      (*rsp32k)[section][plat] = value;
+    });
+  });
+}
+
+void lepton_init_l1(lepton_l1_t *l1, bool value)
+{
+  lepton_foreach_l1_group(group, {
+    lepton_foreach_l1_plat(plat, {
+      (*l1)[group][plat] = value;
+    });
+  });
+}
+
+void lepton_init_l2(lepton_l2_t *l2, bool value)
+{
+  lepton_foreach_l2_plat(plat, {
+    (*l2)[plat] = value;
+  });
+}
+
+void lepton_init_lgl(lepton_lgl_t *lgl, bool value)
+{
+  lepton_foreach_lgl_plat(plat, {
+    (*lgl)[plat] = value;
+  });
+}
+
+void lepton_init_apuc(lepton_apuc_t *apuc)
+{
+  apuc->in_place = true;
+
+  lepton_init_vrs(&apuc->vrs, false);
+
+  lepton_reset_rl(apuc);
+  lepton_reset_gl(apuc);
+  lepton_reset_ggl(apuc);
+
+  lepton_reset_rsp16(apuc);
+  lepton_reset_rsp256(apuc);
+  lepton_reset_rsp2k(apuc);
+  lepton_reset_rsp32k(apuc);
+
+  lepton_reset_l1(apuc);
+  lepton_reset_l2(apuc);
+  lepton_reset_lgl(apuc);
+
+  lepton_init_vr(&apuc->rwinh_filter, true);
+  apuc->rwinh_sects = 0xFFFF;
+
+  apuc->in_place = false;
+}
+
+void lepton_free_apuc(lepton_apuc_t *apuc)
+{
+  if (apuc != NULL) {
+    free(apuc);
+  }
+}
+
+void lepton_free_vr(lepton_vr_t *vr)
+{
+  if (vr != NULL) {
+    free(vr);
+  }
+}
+
+void lepton_free_gl(lepton_gl_t *gl)
+{
+  if (gl != NULL) {
+    free(gl);
+  }
+}
+
+void lepton_free_ggl(lepton_ggl_t *ggl)
+{
+  if (ggl != NULL) {
+    free(ggl);
+  }
+}
+
+void lepton_free_rsp16(lepton_rsp16_t *rsp16)
+{
+  if (rsp16 != NULL) {
+    free(rsp16);
+  }
+}
+
+void lepton_free_rsp256(lepton_rsp256_t *rsp256)
+{
+  if (rsp256 != NULL) {
+    free(rsp256);
+  }
+}
+
+void lepton_free_rsp2k(lepton_rsp2k_t *rsp2k)
+{
+  if (rsp2k != NULL) {
+    free(rsp2k);
+  }
+}
+
+void lepton_free_rsp32k(lepton_rsp32k_t *rsp32k)
+{
+  if (rsp32k != NULL) {
+    free(rsp32k);
+  }
+}
+
+void lepton_free_l1(lepton_l1_t *l1)
+{
+  if (l1 != NULL) {
+    free(l1);
+  }
+}
+
+void lepton_free_l2(lepton_l2_t *l2)
+{
+  if (l2 != NULL) {
+    free(l2);
+  }
+}
+
+void lepton_free_lgl(lepton_lgl_t *lgl)
+{
+  if (lgl != NULL) {
+    free(lgl);
+  }
+}
+
+void lepton_free_wordline(lepton_wordline_t *wordline)
+{
+  if (wordline != NULL) {
+    free(wordline);
+  }
+}
+
+void lepton_free_rsp16_section(lepton_rsp16_section_t *rsp16_section)
+{
+  if (rsp16_section != NULL) {
+    free(rsp16_section);
+  }
+}
+
+void lepton_free_vr_patch(lepton_vr_patch_t *patch)
+{
+  if (patch != NULL) {
+    lepton_free_vr(patch->vr);
+    lepton_free_vr(patch->update);
+    free(patch);
+  }
+}
+
+void lepton_free_wordline_patch(lepton_wordline_patch_t *patch)
+{
+  if (patch != NULL) {
+    // NOTE: Do not free patch->vr because it points to memory in apuc.
+    /* lepton_free_vr(patch->vr); */
+    lepton_free_wordline(patch->update);
+    free(patch);
+  }
+}
+
+void lepton_free_wordline_map(lepton_wordline_map_t *patches)
+{
+  if (patches != NULL) {
+    lepton_foreach_range(i, patches->size, {
+      lepton_wordline_patch_t *patch = &patches->updates[i];
+      lepton_free_wordline(patch->update);
+    });
+    free(patches);
+  }
+}
+
+void lepton_free_l1_patch(lepton_l1_patch_t *patch)
+{
+  if (patch != NULL) {
+    switch (patch->src) {
+    case L1_SRC_GGL:
+      lepton_free_ggl(patch->ggl_patch);
+      break;
+    case L1_SRC_LGL:
+      lepton_free_lgl(patch->lgl_patch);
+      break;
+    }
+    free(patch);
+  }
+}
+
+void lepton_free_l2_patch(lepton_l2_patch_t *patch)
+{
+  if (patch != NULL) {
+    lepton_free_l2(patch->update);
+    free(patch);
+  }
+}
+
+void lepton_free_rsp16_section_patch(lepton_rsp16_section_patch_t *patch)
+{
+  if (patch != NULL) {
+    lepton_free_rsp16_section(patch->update);
+    free(patch);
+  }
+}
+
+void lepton_free_rsp16_section_map(lepton_rsp16_section_map_t *patch)
+{
+  if (patch != NULL) {
+    lepton_foreach_range(i, patch->size, {
+      lepton_rsp16_section_patch_t *update = patch->updates[i];
+      lepton_free_rsp16_section_patch(update);
+    });
+    free(patch);
+  }
+}
+
+void lepton_free_rsp_patches(lepton_rsp_patches_t *patch)
+{
+  if (patch != NULL) {
+    lepton_free_rsp16(patch->rsp16_update);
+    lepton_free_rsp256(patch->rsp256_update);
+    lepton_free_rsp2k(patch->rsp2k_update);
+    lepton_free_rsp32k(patch->rsp32k_update);
+    free(patch);
+  }
+}
+
+void lepton_free_rwinh_rst_patch(lepton_rwinh_rst_patch_t *patch)
+{
+  if (patch != NULL) {
+    free(patch);
+  }
+}
+
+lepton_vr_t *lepton_build_vr()
+{
+  lepton_vr_t *vr = malloc(sizeof(lepton_vr_t));
+  lepton_init_vr(vr, false);
+  return vr;
+}
+
+lepton_gl_t *lepton_build_gl()
+{
+  lepton_gl_t *gl = malloc(sizeof(lepton_gl_t));
+  lepton_init_gl(gl, false);
+  return gl;
+}
+
+lepton_ggl_t *lepton_build_ggl()
+{
+  lepton_ggl_t *ggl = malloc(sizeof(lepton_ggl_t));
+  lepton_init_ggl(ggl, false);
+  return ggl;
+}
+
+lepton_rsp16_t *lepton_build_rsp16()
+{
+  lepton_rsp16_t *rsp16 = malloc(sizeof(lepton_rsp16_t));
+  lepton_init_rsp16(rsp16, false);
+  return rsp16;
+}
+
+lepton_rsp256_t *lepton_build_rsp256()
+{
+  lepton_rsp256_t *rsp256 = malloc(sizeof(lepton_rsp256_t));
+  lepton_init_rsp256(rsp256, false);
+  return rsp256;
+}
+
+lepton_rsp2k_t *lepton_build_rsp2k()
+{
+  lepton_rsp2k_t *rsp2k = malloc(sizeof(lepton_rsp2k_t));
+  lepton_init_rsp2k(rsp2k, false);
+  return rsp2k;
+}
+
+lepton_rsp32k_t *lepton_build_rsp32k()
+{
+  lepton_rsp32k_t *rsp32k = malloc(sizeof(lepton_rsp32k_t));
+  lepton_init_rsp32k(rsp32k, false);
+  return rsp32k;
+}
+
+lepton_l1_t *lepton_build_l1()
+{
+  lepton_l1_t *l1 = malloc(sizeof(lepton_l1_t));
+  lepton_init_l1(l1, false);
+  return l1;
+}
+
+lepton_l2_t *lepton_build_l2()
+{
+  lepton_l2_t *l2 = malloc(sizeof(lepton_l2_t));
+  lepton_init_l2(l2, false);
+  return l2;
+}
+
+lepton_lgl_t *lepton_build_lgl()
+{
+  lepton_lgl_t *lgl = malloc(sizeof(lepton_lgl_t));
+  lepton_init_lgl(lgl, false);
+  return lgl;
+}
+
+lepton_vr_patch_t *lepton_reset_rl(lepton_apuc_t *apuc)
+{
+  if (apuc->in_place) {
+    lepton_init_vr(&apuc->rl, false);
+    return NULL;
+  }
+
+  lepton_vr_patch_t *patch = malloc(sizeof(lepton_vr_patch_t));
+  patch->vr = &apuc->rl;
+  patch->update = NULL;
+  return patch;
+}
+
+lepton_gl_t *lepton_reset_gl(lepton_apuc_t *apuc)
+{
+  if (apuc->in_place) {
+    lepton_init_gl(&apuc->gl, false);
+  }
+  return NULL;
+}
+
+lepton_ggl_t *lepton_reset_ggl(lepton_apuc_t *apuc)
+{
+  if (apuc->in_place) {
+    lepton_init_ggl(&apuc->ggl, false);
+  }
+  return NULL;
+}
+
+lepton_rsp16_t *lepton_reset_rsp16(lepton_apuc_t *apuc)
+{
+  if (apuc->in_place) {
+    lepton_init_rsp16(&apuc->rsp16, false);
+  }
+  return NULL;
+}
+
+lepton_rsp256_t *lepton_reset_rsp256(lepton_apuc_t *apuc)
+{
+  if (apuc->in_place) {
+    lepton_init_rsp256(&apuc->rsp256, false);
+  }
+  return NULL;
+}
+
+lepton_rsp2k_t *lepton_reset_rsp2k(lepton_apuc_t *apuc)
+{
+  if (apuc->in_place) {
+    lepton_init_rsp2k(&apuc->rsp2k, false);
+  }
+  return NULL;
+}
+
+lepton_rsp32k_t *lepton_reset_rsp32k(lepton_apuc_t *apuc)
+{
+  if (apuc->in_place) {
+    lepton_init_rsp32k(&apuc->rsp32k, false);
+  }
+  return NULL;
+}
+
+lepton_l1_t (*lepton_reset_l1(lepton_apuc_t *apuc))[LEPTON_NUM_L1_ROWS]
+{
+  if (apuc->in_place) {
+    lepton_foreach_l1_row(row, {
+      lepton_init_l1(&apuc->l1[row], false);
+    });
+  }
+
+  return NULL;
+}
+
+lepton_l2_t (*lepton_reset_l2(lepton_apuc_t *apuc))[LEPTON_NUM_L2_ROWS]
+{
+  if (apuc->in_place) {
+    lepton_foreach_l2_row(row, {
+      lepton_init_l2(&apuc->l2[row], false);
+    });
+  }
+
+  return NULL;
+}
+
+lepton_lgl_t *lepton_reset_lgl(lepton_apuc_t *apuc)
+{
+  if (apuc->in_place) {
+    lepton_init_lgl(&apuc->lgl, false);
+  }
+
+  return NULL;
+}
+
+bool lepton_any_section_plat(bool ***data, size_t section, size_t lower,
+                             size_t upper) {
+  lepton_foreach_range(plat, lower, upper, {
+    if ((*data)[section][plat]) {
+      return true;
+    }
+  });
+  return false;
+}
+
+void lepton_rsp_from_rsp(bool ***rsp_left,
+                         bool ***rsp_right,
+                         size_t left_width,
+                         size_t right_width)
+{
+  if (left_width < right_width) {
+    lepton_rsp_from_contraction(rsp_left,
+                                rsp_right,
+                                left_width,
+                                right_width);
+  }
+  else {
+    lepton_rsp_from_expansion(rsp_left,
+                              rsp_right,
+                              left_width,
+                              right_width);
+  }
+}
+
+void lepton_rsp_from_contraction(bool ***rsp_left,
+                                 bool ***rsp_right,
+                                 size_t left_width,
+                                 size_t right_width)
+{
+  size_t step_size = right_width / left_width;
+  size_t num_steps = left_width;
+  lepton_foreach_range(step, num_steps, {
+    size_t lower = step * step_size;
+    size_t upper = lower + step_size;
+    lepton_foreach_rsp16_section(section, {
+      (*rsp_left)[section][step] =
+        lepton_any_section_plat(rsp_right, section, lower, upper);
+    });
+  });
+}
+
+void lepton_rsp_from_expansion(bool ***rsp_left,
+                               bool ***rsp_right,
+                               size_t left_width,
+                               size_t right_width)
+{
+  size_t step_size = left_width / right_width;
+  size_t num_steps = right_width;
+  lepton_foreach_range(step, num_steps, {
+    size_t lower = step * step_size;
+    size_t upper = lower + step_size;
+    lepton_foreach_range(section, LEPTON_NUM_SECTIONS, {
+      lepton_foreach_range(plat, lower, upper, {
+        (*rsp_left)[plat][section] = (*rsp_right)[step][section];
+      });
+    });
+  });
+}
+
+lepton_rsp16_t *lepton_rsp16_from_rsp256(lepton_apuc_t *apuc)
+{
+  lepton_rsp16_t *rsp_left;
+
+  if (apuc->in_place) {
+    rsp_left = &apuc->rsp16;
+  }
+  else {
+    rsp_left = lepton_build_rsp16();
+  }
+
+  lepton_rsp256_t *rsp_right = &apuc->rsp256;
+
+  lepton_rsp_from_rsp((bool ***) rsp_left,
+                      (bool ***) rsp_right,
+                      LEPTON_NUM_RSP16_PLATS,
+                      LEPTON_NUM_RSP256_PLATS);
+
+  if (apuc->in_place) {
+    return NULL;
+  }
+
+  return rsp_left;
+}
+
+lepton_rsp256_t *lepton_rsp256_from_rsp16(lepton_apuc_t *apuc)
+{
+  lepton_rsp256_t *rsp_left;
+
+  if (apuc->in_place) {
+    rsp_left = &apuc->rsp256;
+  }
+  else {
+    rsp_left = lepton_build_rsp256();
+  }
+
+  lepton_rsp16_t *rsp_right = &apuc->rsp16;
+
+  lepton_rsp_from_rsp((bool ***) rsp_left,
+                      (bool ***) rsp_right,
+                      LEPTON_NUM_RSP256_PLATS,
+                      LEPTON_NUM_RSP16_PLATS);
+
+  if (apuc->in_place) {
+    return NULL;
+  }
+
+  return rsp_left;
+}
+
+lepton_rsp256_t *lepton_rsp256_from_rsp2k(lepton_apuc_t *apuc)
+{
+  lepton_rsp256_t *rsp_left;
+
+  if (apuc->in_place) {
+    rsp_left = &apuc->rsp256;
+  }
+  else {
+    rsp_left = lepton_build_rsp256();
+  }
+
+  lepton_rsp2k_t *rsp_right = &apuc->rsp2k;
+
+  lepton_rsp_from_rsp((bool ***) rsp_left,
+                      (bool ***) rsp_right,
+                      LEPTON_NUM_RSP256_PLATS,
+                      LEPTON_NUM_RSP2K_PLATS);
+
+  if (apuc->in_place) {
+    return NULL;
+  }
+
+  return rsp_left;
+}
+
+lepton_rsp2k_t *lepton_rsp2k_from_rsp256(lepton_apuc_t *apuc)
+{
+  lepton_rsp2k_t *rsp_left;
+
+  if (apuc->in_place) {
+    rsp_left = &apuc->rsp2k;
+  }
+  else {
+    rsp_left = lepton_build_rsp2k();
+  }
+
+  lepton_rsp256_t *rsp_right = &apuc->rsp256;
+
+  lepton_rsp_from_rsp((bool ***) rsp_left,
+                      (bool ***) rsp_right,
+                      LEPTON_NUM_RSP2K_PLATS,
+                      LEPTON_NUM_RSP256_PLATS);
+
+  if (apuc->in_place) {
+    return NULL;
+  }
+
+  return rsp_left;
+}
+
+lepton_rsp2k_t *lepton_rsp2k_from_rsp32k(lepton_apuc_t *apuc)
+{
+  lepton_rsp2k_t *rsp_left;
+
+  if (apuc->in_place) {
+    rsp_left = &apuc->rsp2k;
+  }
+  else {
+    rsp_left = lepton_build_rsp2k();
+  }
+
+  lepton_rsp32k_t *rsp_right = &apuc->rsp32k;
+
+  lepton_rsp_from_rsp((bool ***) rsp_left,
+                      (bool ***) rsp_right,
+                      LEPTON_NUM_RSP2K_PLATS,
+                      LEPTON_NUM_RSP32K_PLATS);
+
+  if (apuc->in_place) {
+    return NULL;
+  }
+
+  return rsp_left;
+}
+
+lepton_rsp32k_t *lepton_rsp32k_from_rsp2k(lepton_apuc_t *apuc)
+{
+  lepton_rsp32k_t *rsp_left;
+
+  if (apuc->in_place) {
+    rsp_left = &apuc->rsp32k;
+  }
+  else {
+    rsp_left = lepton_build_rsp32k();
+  }
+
+  lepton_rsp2k_t *rsp_right = &apuc->rsp2k;
+
+  lepton_rsp_from_rsp((bool ***) rsp_left,
+                      (bool ***) rsp_right,
+                      LEPTON_NUM_RSP32K_PLATS,
+                      LEPTON_NUM_RSP2K_PLATS);
+
+  if (apuc->in_place) {
+    return NULL;
+  }
+
+  return rsp_left;
+}
+
+void *lepton_noop(lepton_apuc_t *apuc)
+{
+  return NULL;
+}
+
+void *lepton_fsel_noop(lepton_apuc_t *apuc)
+{
+  return NULL;
+}
+
+lepton_rsp_patches_t *rsp_end(lepton_apuc_t *apuc)
+{
+  if (apuc->in_place) {
+    lepton_init_rsp16(&apuc->rsp16, false);
+    lepton_init_rsp256(&apuc->rsp256, false);
+    lepton_init_rsp2k(&apuc->rsp2k, false);
+    lepton_init_rsp32k(&apuc->rsp32k, false);
+    return NULL;
+  }
+
+  return NULL;
+}
+
+void *lepton_rsp_start_ret(lepton_apuc_t *apuc)
+{
+  return NULL;
+}
+
+void *lepton_l2_end(lepton_apuc_t *apuc)
+{
+  return NULL;
+}
+
+lepton_rl_t *lepton_nrl(lepton_apuc_t *apuc)
+{
+  lepton_rl_t *nrl = malloc(sizeof(lepton_rl_t));
+  lepton_foreach_rl_plat(plat, {
+    (*nrl)[0][plat] = false;
+  });
+  lepton_foreach_range(section, 1, LEPTON_NUM_SECTIONS, {
+    lepton_foreach_rl_plat(plat, {
+      (*nrl)[section][plat] = apuc->rl[section - 1][plat];
+    });
+  });
+  return nrl;
+}
+
+lepton_rl_t *lepton_erl(lepton_apuc_t *apuc)
+{
+  lepton_rl_t *erl = malloc(sizeof(lepton_rl_t));
+  lepton_foreach_half_bank(half_bank, {
+    size_t lower = half_bank * LEPTON_NUM_PLATS_PER_HALF_BANK;
+    size_t upper = lower + LEPTON_NUM_PLATS_PER_HALF_BANK;
+    lepton_foreach_rl_section(section, {
+      (*erl)[section][lower] = false;
+      lepton_foreach_range(plat, lower + 1, upper, {
+        (*erl)[section][plat] = apuc->rl[section][plat - 1];
+      });
+    });
+  });
+  return erl;
+}
+
+lepton_rl_t *lepton_wrl(lepton_apuc_t *apuc)
+{
+  lepton_rl_t *wrl = malloc(sizeof(lepton_rl_t));
+  lepton_foreach_half_bank(half_bank, {
+    size_t lower = half_bank * LEPTON_NUM_PLATS_PER_HALF_BANK;
+    size_t upper = lower + LEPTON_NUM_PLATS_PER_HALF_BANK;
+    lepton_foreach_rl_section(section, {
+      (*wrl)[section][upper - 1] = false;
+      lepton_foreach_range(plat, lower, upper - 1, {
+        (*wrl)[section][plat] = apuc->rl[section][plat + 1];
+      });
+    });
+  });
+  return wrl;
+}
+
+lepton_rl_t *lepton_srl(lepton_apuc_t *apuc)
+{
+  lepton_rl_t *srl = malloc(sizeof(lepton_rl_t));
+  lepton_foreach_rl_plat(plat, {
+    (*srl)[LEPTON_NUM_SECTIONS - 1][plat] = false;
+  });
+  lepton_foreach_range(section, LEPTON_NUM_SECTIONS - 1, {
+    lepton_foreach_rl_plat(plat, {
+      (*srl)[section][plat] = apuc->rl[section + 1][plat];
+    });
+  });
+  return srl;
+}
+
+lepton_gl_t *lepton_ternary_expr(lepton_apuc_t *apuc,
+                                 lepton_gl_t *nth1,
+                                 lepton_gl_t *nth2,
+                                 lepton_gl_t *nth3,
+                                 lepton_ternary_op_t op1,
+                                 lepton_binary_op_t op2)
+{
+  lepton_gl_t *result = op2(nth2, nth3);
+  op1(nth1, result, result);
+  return result;
+}
+
+size_t lepton_count_masked_sections(uint16_t mask)
+{
+  size_t num_masked_sections = 0;
+  lepton_foreach_masked_section(mask, section, {
+    num_masked_sections += 1;
+  });
+  return num_masked_sections;
+}
+
+lepton_vr_t *lepton_brsp16(lepton_rsp16_t *rsp16)
+{
+  lepton_vr_t *brsp16 = malloc(sizeof(lepton_vr_t));
+  lepton_foreach_rsp16_plat(rsp16_plat, {
+    size_t lower = rsp16_plat * 16;
+    size_t upper = lower + 16;
+    lepton_foreach_range(vr_plat, lower, upper, {
+      lepton_foreach_rsp16_section(section, {
+        (*brsp16)[section][vr_plat] = (*rsp16)[rsp16_plat];
+      });
+    });
+  });
+  return brsp16;
+}
+
+lepton_wordline_map_t *lepton_sb_op_eq_gl(lepton_apuc_t *apuc,
+                                          uint16_t mask,
+                                          lepton_vr_t *vrs[],
+                                          size_t num_vrs,
+                                          lepton_binary_op_t op,
+                                          lepton_gl_t *gl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+    malloc(sizeof(lepton_wordline_map_t)
+           + num_vrs * num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_vrs * num_sections;
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *rhs =
+      lepton_left_and_right(gl, filter);
+    lepton_foreach_range(i, num_vrs, {
+      lepton_vr_t *vr = vrs[i];
+      lepton_wordline_t *lhs = &(*vr)[section];
+      lepton_wordline_t *result = op(lhs, rhs);
+      patch->updates[nth_update].vr = vr;
+      patch->updates[nth_update].section = section;
+      patch->updates[nth_update].update = result;
+      nth_update += 1;
+    });
+    lepton_free_wordline(rhs);
+  });
+  return patch;
+}
+
+lepton_wordline_map_t *lepton_sb_op_eq_ggl(lepton_apuc_t *apuc,
+                                           uint16_t mask,
+                                           lepton_vr_t *vrs[],
+                                           size_t num_vrs,
+                                           lepton_binary_op_t op,
+                                           lepton_ggl_t *ggl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+    malloc(sizeof(lepton_wordline_map_t)
+           + num_vrs * num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_vrs * num_sections;
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *pseudo_gl = &(*ggl)[section / LEPTON_NUM_GROUPS];
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *rhs =
+      lepton_left_and_right(pseudo_gl, filter);
+    lepton_foreach_range(i, num_vrs, {
+      lepton_vr_t *vr = vrs[i];
+      lepton_wordline_t *lhs = &(*vr)[section];
+      lepton_wordline_t *result = op(lhs, rhs);
+      patch->updates[nth_update].vr = vr;
+      patch->updates[nth_update].section = section;
+      patch->updates[nth_update].update = result;
+      nth_update += 1;
+    });
+    lepton_free_wordline(rhs);
+  });
+  return patch;
+}
+
+lepton_wordline_map_t *lepton_sb_op_eq_rl(lepton_apuc_t *apuc,
+                                          uint16_t mask,
+                                          lepton_vr_t *vrs[],
+                                          size_t num_vrs,
+                                          lepton_binary_op_t op,
+                                          lepton_rl_t *rl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+    malloc(sizeof(lepton_wordline_map_t)
+           + num_vrs * num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_vrs * num_sections;
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *wordline = &(*rl)[section];
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *rhs =
+      lepton_left_and_right(wordline, filter);
+    lepton_foreach_range(i, num_vrs, {
+      lepton_vr_t *vr = vrs[i];
+      lepton_wordline_t *lhs = &(*vr)[section];
+      lepton_wordline_t *result = op(lhs, rhs);
+      patch->updates[nth_update].vr = vr;
+      patch->updates[nth_update].section = section;
+      patch->updates[nth_update].update = result;
+      nth_update += 1;
+    });
+    lepton_free_wordline(rhs);
+  });
+  return patch;
+}
+
+lepton_wordline_map_t *lepton_sb_op_eq_rsp16(lepton_apuc_t *apuc,
+                                             uint16_t mask,
+                                             lepton_vr_t *vrs[],
+                                             size_t num_vrs,
+                                             lepton_binary_op_t op,
+                                             lepton_rsp16_t *rsp16)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+    malloc(sizeof(lepton_wordline_map_t)
+           + num_vrs * num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_vrs * num_sections;
+
+  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_foreach_masked_section(mask, section, {
+    lepton_foreach_vr_plat(plat, {
+      (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
+    });
+  });
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *rhs = &(*filtered_brsp16)[section];
+    lepton_foreach_range(i, num_vrs, {
+      lepton_vr_t *vr = vrs[i];
+      lepton_wordline_t *lhs = &(*vr)[section];
+      lepton_wordline_t *result = op(lhs, rhs);
+      patch->updates[nth_update].vr = vr;
+      patch->updates[nth_update].section = section;
+      patch->updates[nth_update].update = result;
+      nth_update += 1;
+    });
+  });
+
+  free(filtered_brsp16);
+  return patch;
+}
+
+lepton_wordline_map_t *lepton_sb_op_eq_src(lepton_apuc_t *apuc,
+                                           uint16_t mask,
+                                           lepton_vr_t *vrs[],
+                                           size_t num_vrs,
+                                           lepton_binary_op_t op,
+                                           void *src,
+                                           lepton_src_t src_type)
+{
+  switch (src_type) {
+  case LEPTON_SRC_GL: // fallthrough
+  case LEPTON_SRC_INV_GL: {
+    return lepton_sb_op_eq_gl(apuc, mask, vrs, num_vrs, op, src);
+  }
+  case LEPTON_SRC_GGL: // fallthrough
+  case LEPTON_SRC_INV_GGL: {
+    return lepton_sb_op_eq_ggl(apuc, mask, vrs, num_vrs, op, src);
+  }
+  case LEPTON_SRC_RL: // fallthrough
+  case LEPTON_SRC_NRL: // fallthrough
+  case LEPTON_SRC_ERL: // fallthrough
+  case LEPTON_SRC_WRL: // fallthrough
+  case LEPTON_SRC_SRL: // fallthrough
+  case LEPTON_SRC_INV_RL: // fallthrough
+  case LEPTON_SRC_INV_NRL: // fallthrough
+  case LEPTON_SRC_INV_ERL: // fallthrough
+  case LEPTON_SRC_INV_WRL: // fallthrough
+  case LEPTON_SRC_INV_SRL: {
+    return lepton_sb_op_eq_rl(apuc, mask, vrs, num_vrs, op, src);
+  }
+  case LEPTON_SRC_RSP16: // fallthrough
+  case LEPTON_SRC_INV_RSP16: {
+    return lepton_sb_op_eq_rsp16(apuc, mask, vrs, num_vrs, op, src);
+  }
+  }
+}
+
+lepton_wordline_map_t * lepton_sb_from_src(lepton_apuc_t *apuc,
+                                           uint16_t mask,
+                                           lepton_vr_t *vrs[],
+                                           size_t num_vrs,
+                                           void *src,
+                                           lepton_src_t src_type)
+{
+  return lepton_sb_op_eq_src(apuc, mask,
+                             vrs, num_vrs,
+                             lepton_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t * lepton_sb_from_inv_src(lepton_apuc_t *apuc,
+                                               uint16_t mask,
+                                               lepton_vr_t *vrs[],
+                                               size_t num_vrs,
+                                               void *src,
+                                               lepton_src_t src_type)
+{
+  return lepton_sb_op_eq_src(apuc, mask,
+                             vrs, num_vrs,
+                             lepton_inv_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t * lepton_sb_cond_equals_src(lepton_apuc_t *apuc,
+                                                  uint16_t mask,
+                                                  lepton_vr_t *vrs[],
+                                                  size_t num_vrs,
+                                                  void *src,
+                                                  lepton_src_t src_type)
+{
+  return lepton_sb_op_eq_src(apuc, mask,
+                             vrs, num_vrs,
+                             lepton_left_or_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t * lepton_sb_cond_equals_inv_src(lepton_apuc_t *apuc,
+                                                      uint16_t mask,
+                                                      lepton_vr_t *vrs[],
+                                                      size_t num_vrs,
+                                                      void *src,
+                                                      lepton_src_t src_type)
+{
+  return lepton_sb_op_eq_src(apuc, mask,
+                             vrs, num_vrs,
+                             lepton_left_and_inv_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t *lepton_set_rl(lepton_apuc_t *apuc,
+                                     uint16_t mask,
+                                     bool bit)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+    malloc(sizeof(lepton_wordline_map_t)
+           + num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_wordline_t *wordline = malloc(LEPTON_WORDLINE_SIZE);
+  memset(wordline, bit, LEPTON_WORDLINE_SIZE);
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *result = lepton_left_and_right(wordline, filter);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+  });
+
+  free(wordline);
+  return patch;
+}
+
+lepton_wordline_t *lepton_conjoin_sections_in_place(lepton_vr_t *vrs[],
+                                                    size_t num_vrs,
+                                                    size_t section,
+                                                    lepton_wordline_t *conj)
+{
+  memset(conj, true, LEPTON_WORDLINE_SIZE);
+  lepton_foreach_range(i, num_vrs, {
+      lepton_wordline_t *wordline = &(*vrs[i])[section];
+      lepton_left_and_right_in_place(conj, wordline, conj);
+    });
+  return conj;
+}
+
+lepton_wordline_t *lepton_conjoin_sections(lepton_vr_t *vrs[],
+                                           size_t num_vrs,
+                                           size_t section)
+{
+  lepton_wordline_t *conj = malloc(LEPTON_WORDLINE_SIZE);
+  return lepton_conjoin_sections_in_place(vrs, num_vrs, section, conj);
+}
+
+lepton_wordline_map_t *lepton_rl_op_eq_gl(lepton_apuc_t *apuc,
+                                          uint16_t mask,
+                                          lepton_binary_op_t op,
+                                          lepton_gl_t *gl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+    malloc(sizeof(lepton_wordline_map_t)
+           + num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *lhs = &apuc->rl[section];
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *rhs = lepton_left_and_right(gl, filter);
+    lepton_wordline_t *result = op(lhs, rhs);
+    lepton_free_wordline(rhs);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+  });
+
+  return patch;
+}
+
+lepton_wordline_map_t *lepton_rl_op_eq_ggl(lepton_apuc_t *apuc,
+                                           uint16_t mask,
+                                           lepton_binary_op_t op,
+                                           lepton_ggl_t *ggl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+    malloc(sizeof(lepton_wordline_map_t)
+           + num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *pseudo_gl = &(*ggl)[section / LEPTON_NUM_GROUPS];
+    lepton_wordline_t *lhs = &apuc->rl[section];
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *rhs = lepton_left_and_right(pseudo_gl, filter);
+    lepton_wordline_t *result = op(lhs, rhs);
+    lepton_free_wordline(rhs);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+  });
+
+  return patch;
+}
+
+lepton_wordline_map_t *lepton_rl_op_eq_rl(lepton_apuc_t *apuc,
+                                          uint16_t mask,
+                                          lepton_binary_op_t op,
+                                          lepton_rl_t *rl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+    malloc(sizeof(lepton_wordline_map_t)
+           + num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *lhs = &apuc->rl[section];
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *rhs = lepton_left_and_right(&(*rl)[section], filter);
+    lepton_wordline_t *result = op(lhs, rhs);
+    lepton_free_wordline(rhs);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+  });
+
+  return patch;
+}
+
+lepton_wordline_map_t *lepton_rl_op_eq_rsp16(lepton_apuc_t *apuc,
+                                             uint16_t mask,
+                                             lepton_binary_op_t op,
+                                             lepton_rsp16_t *rsp16)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+    malloc(sizeof(lepton_wordline_map_t)
+           + num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_foreach_masked_section(mask, section, {
+    lepton_foreach_vr_plat(plat, {
+      (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
+    });
+  });
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *lhs = &apuc->rl[section];
+    lepton_wordline_t *rhs = &(*filtered_brsp16)[section];
+    lepton_wordline_t *result = op(lhs, rhs);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+  });
+
+  free(filtered_brsp16);
+  return patch;
+}
+
+lepton_wordline_map_t *lepton_rl_op_eq_src(lepton_apuc_t *apuc,
+                                           uint16_t mask,
+                                           lepton_binary_op_t op,
+                                           void *src,
+                                           lepton_src_t src_type)
+{
+  switch (src_type) {
+  case LEPTON_SRC_GL: // fallthrough
+  case LEPTON_SRC_INV_GL: {
+    return lepton_rl_op_eq_gl(apuc, mask, op, src);
+  }
+  case LEPTON_SRC_GGL: // fallthrough
+  case LEPTON_SRC_INV_GGL: {
+    return lepton_rl_op_eq_ggl(apuc, mask, op, src);
+  }
+  case LEPTON_SRC_RL: // fallthrough
+  case LEPTON_SRC_NRL: // fallthrough
+  case LEPTON_SRC_ERL: // fallthrough
+  case LEPTON_SRC_WRL: // fallthrough
+  case LEPTON_SRC_SRL: // fallthrough
+  case LEPTON_SRC_INV_RL: // fallthrough
+  case LEPTON_SRC_INV_NRL: // fallthrough
+  case LEPTON_SRC_INV_ERL: // fallthrough
+  case LEPTON_SRC_INV_WRL: // fallthrough
+  case LEPTON_SRC_INV_SRL: {
+    return lepton_rl_op_eq_rl(apuc, mask, op, src);
+  }
+  case LEPTON_SRC_RSP16: // fallthrough
+  case LEPTON_SRC_INV_RSP16: {
+    return lepton_rl_op_eq_rsp16(apuc, mask, op, src);
+  }
+  }
+}
+
+lepton_wordline_map_t *lepton_rl_from_src(lepton_apuc_t *apuc,
+                                          uint16_t mask,
+                                          void *src,
+                                          lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_src(apuc, mask,
+                             lepton_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_from_inv_src(lepton_apuc_t *apuc,
+                                              uint16_t mask,
+                                              void *src,
+                                              lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_src(apuc, mask,
+                             lepton_inv_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_or_eq_src(lepton_apuc_t *apuc,
+                                           uint16_t mask,
+                                           void *src,
+                                           lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_src(apuc, mask,
+                             lepton_left_or_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_or_eq_inv_src(lepton_apuc_t *apuc,
+                                               uint16_t mask,
+                                               void *src,
+                                               lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_src(apuc, mask,
+                             lepton_left_or_inv_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_and_eq_src(lepton_apuc_t *apuc,
+                                            uint16_t mask,
+                                            void *src,
+                                            lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_src(apuc, mask,
+                             lepton_left_and_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_and_eq_inv_src(lepton_apuc_t *apuc,
+                                                uint16_t mask,
+                                                void *src,
+                                                lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_src(apuc, mask,
+                             lepton_left_and_inv_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_xor_eq_src(lepton_apuc_t *apuc,
+                                            uint16_t mask,
+                                            void *src,
+                                            lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_src(apuc, mask,
+                             lepton_left_xor_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_xor_eq_inv_src(lepton_apuc_t *apuc,
+                                                uint16_t mask,
+                                                void *src,
+                                                lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_src(apuc, mask,
+                             lepton_left_xor_inv_right,
+                             src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_op_eq_sb(lepton_apuc_t *apuc,
+                                          uint16_t mask,
+                                          lepton_binary_op_t op,
+                                          lepton_vr_t *vrs[],
+                                          size_t num_vrs)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+    malloc(sizeof(lepton_wordline_map_t)
+           + num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *lhs = &apuc->rl[section];
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
+    lepton_wordline_t *rhs = lepton_left_and_right(sbdata, filter);
+    lepton_wordline_t *result = op(lhs, rhs);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+    lepton_free_wordline(rhs);
+  });
+
+  lepton_free_wordline(sbdata);
+  return patch;
+}
+
+lepton_wordline_map_t *lepton_rl_from_sb(lepton_apuc_t *apuc,
+                                         uint16_t mask,
+                                         lepton_vr_t *vrs[],
+                                         size_t num_vrs)
+{
+  return lepton_rl_op_eq_sb(apuc, mask, lepton_right, vrs, num_vrs);
+}
+
+lepton_wordline_map_t *lepton_rl_from_inv_sb(lepton_apuc_t *apuc,
+                                             uint16_t mask,
+                                             lepton_vr_t *vrs[],
+                                             size_t num_vrs)
+{
+  return lepton_rl_op_eq_sb(apuc, mask, lepton_inv_right, vrs, num_vrs);
+}
+
+lepton_wordline_map_t *lepton_rl_or_eq_sb(lepton_apuc_t *apuc,
+                                          uint16_t mask,
+                                          lepton_vr_t *vrs[],
+                                          size_t num_vrs)
+{
+  return lepton_rl_op_eq_sb(apuc, mask, lepton_left_or_right, vrs, num_vrs);
+}
+
+lepton_wordline_map_t *lepton_rl_and_eq_sb(lepton_apuc_t *apuc,
+                                           uint16_t mask,
+                                           lepton_vr_t *vrs[],
+                                           size_t num_vrs)
+{
+  return lepton_rl_op_eq_sb(apuc, mask, lepton_left_and_right, vrs, num_vrs);
+}
+
+lepton_wordline_map_t *lepton_rl_and_eq_inv_sb(lepton_apuc_t *apuc,
+                                               uint16_t mask,
+                                               lepton_vr_t *vrs[],
+                                               size_t num_vrs)
+{
+  return lepton_rl_op_eq_sb(apuc, mask, lepton_left_and_inv_right, vrs, num_vrs);
+}
+
+lepton_wordline_map_t *lepton_rl_xor_eq_sb(lepton_apuc_t *apuc, uint16_t mask,
+                                           lepton_vr_t *vrs[], size_t num_vrs)
+{
+  return lepton_rl_op_eq_sb(apuc, mask, lepton_left_xor_right, vrs, num_vrs);
+}
+
+lepton_wordline_map_t *
+lepton_rl_op_eq_sb_and_gl(lepton_apuc_t *apuc, uint16_t mask,
+                          lepton_ternary_op_t op1, lepton_binary_op_t op2,
+                          lepton_vr_t *vrs[], size_t num_vrs, lepton_gl_t *gl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+      malloc(sizeof(lepton_wordline_map_t) +
+             num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *nth1 = &apuc->rl[section];
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
+    lepton_wordline_t *nth2 = lepton_left_and_right(sbdata, filter);
+    lepton_wordline_t *nth3 = lepton_left_and_right(gl, filter);
+    lepton_wordline_t *result =
+      lepton_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+    lepton_free_wordline(nth2);
+    lepton_free_wordline(nth3);
+  });
+
+  lepton_free_wordline(sbdata);
+  return patch;
+}
+
+lepton_wordline_map_t *
+lepton_rl_op_eq_sb_and_ggl(lepton_apuc_t *apuc, uint16_t mask,
+                           lepton_ternary_op_t op1, lepton_binary_op_t op2,
+                           lepton_vr_t *vrs[], size_t num_vrs, lepton_ggl_t *ggl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+      malloc(sizeof(lepton_wordline_map_t) +
+             num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *nth1 = &apuc->rl[section];
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *pseudo_gl = &(*ggl)[section / LEPTON_NUM_GROUPS];
+    lepton_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
+    lepton_wordline_t *nth2 = lepton_left_and_right(sbdata, filter);
+    lepton_wordline_t *nth3 = lepton_left_and_right(pseudo_gl, filter);
+    lepton_wordline_t *result =
+      lepton_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+    lepton_free_wordline(nth2);
+    lepton_free_wordline(nth3);
+  });
+
+  lepton_free_wordline(sbdata);
+  return patch;
+}
+
+lepton_wordline_map_t *
+lepton_rl_op_eq_sb_and_rl(lepton_apuc_t *apuc, uint16_t mask,
+                           lepton_ternary_op_t op1, lepton_binary_op_t op2,
+                           lepton_vr_t *vrs[], size_t num_vrs, lepton_rl_t *rl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+      malloc(sizeof(lepton_wordline_map_t) +
+             num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *nth1 = &apuc->rl[section];
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *wordline = &(*rl)[section];
+    lepton_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
+    lepton_wordline_t *nth2 = lepton_left_and_right(sbdata, filter);
+    lepton_wordline_t *nth3 = lepton_left_and_right(wordline, filter);
+    lepton_wordline_t *result =
+      lepton_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+    lepton_free_wordline(nth2);
+    lepton_free_wordline(nth3);
+  });
+
+  lepton_free_wordline(sbdata);
+  return patch;
+}
+
+lepton_wordline_map_t *
+lepton_rl_op_eq_sb_and_rsp16(lepton_apuc_t *apuc, uint16_t mask,
+                             lepton_ternary_op_t op1, lepton_binary_op_t op2,
+                             lepton_vr_t *vrs[], size_t num_vrs,
+                             lepton_rsp16_t *rsp16)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+      malloc(sizeof(lepton_wordline_map_t) +
+             num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
+
+  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_foreach_masked_section(mask, section, {
+    lepton_foreach_vr_plat(plat, {
+      (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
+    });
+  });
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *nth1 = &apuc->rl[section];
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *wordline = &(*filtered_brsp16)[section];
+    lepton_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
+    lepton_wordline_t *nth2 = lepton_left_and_right(sbdata, filter);
+    lepton_wordline_t *nth3 = lepton_left_and_right(wordline, filter);
+    lepton_wordline_t *result =
+      lepton_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+    lepton_free_wordline(nth2);
+    lepton_free_wordline(nth3);
+  });
+
+  lepton_free_vr(filtered_brsp16);
+  lepton_free_wordline(sbdata);
+  return patch;
+}
+
+lepton_wordline_map_t *
+lepton_rl_op_eq_sb_and_src(lepton_apuc_t *apuc, uint16_t mask,
+                           lepton_ternary_op_t op1, lepton_binary_op_t op2,
+                           lepton_vr_t *vrs[], size_t num_vrs, void *src,
+                           lepton_src_t src_type)
+{
+  switch (src_type) {
+  case LEPTON_SRC_GL: // fallthrough
+  case LEPTON_SRC_INV_GL: {
+    return lepton_rl_op_eq_sb_and_gl(apuc, mask, op1, op2, vrs, num_vrs, src);
+  }
+  case LEPTON_SRC_GGL: // fallthrough
+  case LEPTON_SRC_INV_GGL: {
+    return lepton_rl_op_eq_sb_and_ggl(apuc, mask, op1, op2, vrs, num_vrs, src);
+  }
+  case LEPTON_SRC_RL:      // fallthrough
+  case LEPTON_SRC_NRL:     // fallthrough
+  case LEPTON_SRC_ERL:     // fallthrough
+  case LEPTON_SRC_WRL:     // fallthrough
+  case LEPTON_SRC_SRL:     // fallthrough
+  case LEPTON_SRC_INV_RL:  // fallthrough
+  case LEPTON_SRC_INV_NRL: // fallthrough
+  case LEPTON_SRC_INV_ERL: // fallthrough
+  case LEPTON_SRC_INV_WRL: // fallthrough
+  case LEPTON_SRC_INV_SRL: {
+    return lepton_rl_op_eq_sb_and_rl(apuc, mask, op1, op2, vrs, num_vrs, src);
+  }
+  case LEPTON_SRC_RSP16: // fallthrough
+  case LEPTON_SRC_INV_RSP16: {
+    return lepton_rl_op_eq_sb_and_rsp16(apuc, mask, op1, op2, vrs, num_vrs,
+                                        src);
+  }
+  }
+}
+
+lepton_wordline_map_t *lepton_rl_from_sb_and_src(lepton_apuc_t *apuc,
+                                                 uint16_t mask,
+                                                 lepton_vr_t *vrs[],
+                                                 size_t num_vrs, void *src,
+                                                 lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_sb_and_src(apuc, mask, lepton_right_in_place,
+                                    lepton_left_and_right, vrs, num_vrs, src,
+                                    src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_or_eq_sb_and_src(lepton_apuc_t *apuc,
+                                                  uint16_t mask,
+                                                  lepton_vr_t *vrs[],
+                                                  size_t num_vrs, void *src,
+                                                  lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_sb_and_src(apuc, mask, lepton_left_or_right_in_place,
+                                    lepton_left_and_right, vrs, num_vrs, src,
+                                    src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_or_eq_sb_and_inv_src(lepton_apuc_t *apuc,
+                                                      uint16_t mask,
+                                                      lepton_vr_t *vrs[],
+                                                      size_t num_vrs, void *src,
+                                                      lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_sb_and_src(apuc, mask, lepton_left_or_right_in_place,
+                                    lepton_left_and_inv_right, vrs, num_vrs,
+                                    src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_and_eq_sb_and_src(lepton_apuc_t *apuc,
+                                                   uint16_t mask,
+                                                   lepton_vr_t *vrs[],
+                                                   size_t num_vrs, void *src,
+                                                   lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_sb_and_src(apuc, mask, lepton_left_and_right_in_place,
+                                    lepton_left_and_right, vrs, num_vrs,
+                                    src, src_type);
+}
+
+lepton_wordline_map_t *
+lepton_rl_and_eq_sb_and_inv_src(lepton_apuc_t *apuc, uint16_t mask,
+                                lepton_vr_t *vrs[], size_t num_vrs, void *src,
+                                lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_sb_and_src(apuc, mask, lepton_left_and_right_in_place,
+                                    lepton_left_and_inv_right, vrs, num_vrs,
+                                    src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_xor_eq_sb_and_src(lepton_apuc_t *apuc,
+                                                   uint16_t mask,
+                                                   lepton_vr_t *vrs[],
+                                                   size_t num_vrs, void *src,
+                                                   lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_sb_and_src(apuc, mask, lepton_left_xor_right_in_place,
+                                    lepton_left_and_right, vrs, num_vrs, src,
+                                    src_type);
+}
+
+lepton_wordline_map_t *
+lepton_rl_xor_eq_sb_and_inv_src(lepton_apuc_t *apuc, uint16_t mask,
+                                lepton_vr_t *vrs[], size_t num_vrs, void *src,
+                                lepton_src_t src_type)
+{
+  return lepton_rl_op_eq_sb_and_src(apuc, mask, lepton_left_xor_right_in_place,
+                                    lepton_left_and_inv_right, vrs, num_vrs,
+                                    src, src_type);
+}
+
+lepton_wordline_map_t *
+lepton_rl_from_sb_binop_gl(lepton_apuc_t *apuc, uint16_t mask,
+                           lepton_vr_t *vrs[], size_t num_vrs,
+                           lepton_binary_op_t op, lepton_gl_t *gl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+      malloc(sizeof(lepton_wordline_map_t) +
+             num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
+    lepton_wordline_t *lhs = lepton_left_and_right(sbdata, filter);
+    lepton_wordline_t *rhs = lepton_left_and_right(gl, filter);
+    lepton_wordline_t *result = op(lhs, rhs);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+    lepton_free_wordline(lhs);
+    lepton_free_wordline(rhs);
+  });
+
+  lepton_free_wordline(sbdata);
+  return patch;
+}
+
+lepton_wordline_map_t *
+lepton_rl_from_sb_binop_ggl(lepton_apuc_t *apuc, uint16_t mask,
+                            lepton_vr_t *vrs[], size_t num_vrs,
+                            lepton_binary_op_t op, lepton_ggl_t *ggl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+      malloc(sizeof(lepton_wordline_map_t) +
+             num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *pseudo_gl = &(*ggl)[section / LEPTON_NUM_GROUPS];
+    lepton_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
+    lepton_wordline_t *lhs = lepton_left_and_right(sbdata, filter);
+    lepton_wordline_t *rhs = lepton_left_and_right(pseudo_gl, filter);
+    lepton_wordline_t *result = op(lhs, rhs);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+    lepton_free_wordline(lhs);
+    lepton_free_wordline(rhs);
+  });
+
+  lepton_free_wordline(sbdata);
+  return patch;
+}
+
+lepton_wordline_map_t *
+lepton_rl_from_sb_binop_rl(lepton_apuc_t *apuc, uint16_t mask,
+                           lepton_vr_t *vrs[], size_t num_vrs,
+                           lepton_binary_op_t op, lepton_rl_t *rl)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+      malloc(sizeof(lepton_wordline_map_t) +
+             num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *wordline = &(*rl)[section];
+    lepton_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
+    lepton_wordline_t *lhs = lepton_left_and_right(sbdata, filter);
+    lepton_wordline_t *rhs = lepton_left_and_right(wordline, filter);
+    lepton_wordline_t *result = op(lhs, rhs);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+    lepton_free_wordline(lhs);
+    lepton_free_wordline(rhs);
+  });
+
+  lepton_free_wordline(sbdata);
+  return patch;
+}
+
+lepton_wordline_map_t *
+lepton_rl_from_sb_binop_rsp16(lepton_apuc_t *apuc, uint16_t mask,
+                              lepton_vr_t *vrs[], size_t num_vrs,
+                              lepton_binary_op_t op, lepton_rsp16_t *rsp16)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_wordline_map_t *patch =
+      malloc(sizeof(lepton_wordline_map_t) +
+             num_sections * sizeof(lepton_wordline_patch_t));
+  patch->size = num_sections;
+
+  lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
+
+  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_foreach_masked_section(mask, section, {
+    lepton_foreach_vr_plat(plat, {
+      (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
+    });
+  });
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    lepton_wordline_t *filter = &apuc->rwinh_filter[section];
+    lepton_wordline_t *wordline = &(*filtered_brsp16)[section];
+    lepton_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
+    lepton_wordline_t *lhs = lepton_left_and_right(sbdata, filter);
+    lepton_wordline_t *rhs = lepton_left_and_right(wordline, filter);
+    lepton_wordline_t *result = op(lhs, rhs);
+    patch->updates[nth_update].vr = &apuc->rl;
+    patch->updates[nth_update].section = section;
+    patch->updates[nth_update].update = result;
+    nth_update += 1;
+    lepton_free_wordline(lhs);
+    lepton_free_wordline(rhs);
+  });
+
+  lepton_free_vr(filtered_brsp16);
+  lepton_free_wordline(sbdata);
+  return patch;
+}
+
+lepton_wordline_map_t *lepton_rl_from_sb_binop_src(
+    lepton_apuc_t *apuc, uint16_t mask, lepton_vr_t *vrs[], size_t num_vrs,
+    lepton_binary_op_t op, void *src, lepton_src_t src_type)
+{
+  switch (src_type) {
+  case LEPTON_SRC_GL: // fallthrough
+  case LEPTON_SRC_INV_GL: {
+    return lepton_rl_from_sb_binop_gl(apuc, mask, vrs, num_vrs, op, src);
+  }
+  case LEPTON_SRC_GGL: // fallthrough
+  case LEPTON_SRC_INV_GGL: {
+    return lepton_rl_from_sb_binop_ggl(apuc, mask, vrs, num_vrs, op, src);
+  }
+  case LEPTON_SRC_RL:      // fallthrough
+  case LEPTON_SRC_NRL:     // fallthrough
+  case LEPTON_SRC_ERL:     // fallthrough
+  case LEPTON_SRC_WRL:     // fallthrough
+  case LEPTON_SRC_SRL:     // fallthrough
+  case LEPTON_SRC_INV_RL:  // fallthrough
+  case LEPTON_SRC_INV_NRL: // fallthrough
+  case LEPTON_SRC_INV_ERL: // fallthrough
+  case LEPTON_SRC_INV_WRL: // fallthrough
+  case LEPTON_SRC_INV_SRL: {
+    return lepton_rl_from_sb_binop_rl(apuc, mask, vrs, num_vrs, op, src);
+  }
+  case LEPTON_SRC_RSP16: // fallthrough
+  case LEPTON_SRC_INV_RSP16: {
+    return lepton_rl_from_sb_binop_rsp16(apuc, mask, vrs, num_vrs, op, src);
+  }
+  }
+}
+
+lepton_wordline_map_t *
+lepton_rl_from_sb_or_src(lepton_apuc_t *apuc, uint16_t mask, lepton_vr_t *vrs[],
+                         size_t num_vrs, void *src, lepton_src_t src_type)
+{
+  return lepton_rl_from_sb_binop_src(apuc, mask, vrs, num_vrs,
+                                     lepton_left_or_right, src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_from_sb_or_inv_src(lepton_apuc_t *apuc,
+                                                    uint16_t mask,
+                                                    lepton_vr_t *vrs[],
+                                                    size_t num_vrs, void *src,
+                                                    lepton_src_t src_type)
+{
+  return lepton_rl_from_sb_binop_src(apuc, mask, vrs, num_vrs,
+                                     lepton_left_or_inv_right, src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_from_sb_xor_src(lepton_apuc_t *apuc,
+                                                 uint16_t mask,
+                                                 lepton_vr_t *vrs[],
+                                                 size_t num_vrs, void *src,
+                                                 lepton_src_t src_type)
+{
+  return lepton_rl_from_sb_binop_src(apuc, mask, vrs, num_vrs,
+                                     lepton_left_xor_right, src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_from_sb_xor_inv_src(lepton_apuc_t *apuc,
+                                                     uint16_t mask,
+                                                     lepton_vr_t *vrs[],
+                                                     size_t num_vrs, void *src,
+                                                     lepton_src_t src_type)
+{
+  return lepton_rl_from_sb_binop_src(apuc, mask, vrs, num_vrs,
+                                     lepton_left_xor_inv_right, src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_from_inv_sb_and_src(lepton_apuc_t *apuc,
+                                                     uint16_t mask,
+                                                     lepton_vr_t *vrs[],
+                                                     size_t num_vrs, void *src,
+                                                     lepton_src_t src_type)
+{
+  return lepton_rl_from_sb_binop_src(apuc, mask, vrs, num_vrs,
+                                     lepton_inv_left_and_right, src, src_type);
+}
+
+lepton_wordline_map_t *
+lepton_rl_from_inv_sb_and_inv_src(lepton_apuc_t *apuc, uint16_t mask,
+                                  lepton_vr_t *vrs[], size_t num_vrs, void *src,
+                                  lepton_src_t src_type)
+{
+  return lepton_rl_from_sb_binop_src(
+      apuc, mask, vrs, num_vrs, lepton_inv_left_and_inv_right, src, src_type);
+}
+
+lepton_wordline_map_t *lepton_rl_from_sb_and_inv_src(lepton_apuc_t *apuc,
+                                                     uint16_t mask,
+                                                     lepton_vr_t *vrs[],
+                                                     size_t num_vrs, void *src,
+                                                     lepton_src_t src_type)
+{
+  return lepton_rl_from_sb_binop_src(apuc, mask, vrs, num_vrs,
+                                     lepton_left_and_inv_right, src, src_type);
+}
+
+lepton_rsp16_section_map_t *lepton_rsp16_from_rl(lepton_apuc_t *apuc,
+                                                 uint16_t mask) {
+
+  size_t num_sections = lepton_count_masked_sections(mask);
+  lepton_rsp16_section_map_t *patch =
+      malloc(sizeof(lepton_rsp16_section_map_t) +
+             num_sections * sizeof(lepton_rsp16_section_patch_t *));
+  patch->size = num_sections;
+
+  lepton_foreach_range(ipatch, num_sections, {
+    patch->updates[ipatch] = malloc(sizeof(lepton_rsp16_section_patch_t));
+  });
+
+  size_t nth_update = 0;
+  lepton_foreach_masked_section(mask, section, {
+    patch->updates[nth_update]->section = section;
+    patch->updates[nth_update]->update = malloc(sizeof(lepton_rsp16_section_t));
+    nth_update += 1;
+  });
+
+  size_t step_size = LEPTON_NUM_RL_PLATS / LEPTON_NUM_RSP16_PLATS;
+  size_t num_steps = LEPTON_NUM_RSP16_PLATS;
+  lepton_foreach_range(step, num_steps, {
+    size_t lower = step * step_size;
+    size_t upper = lower + step_size;
+    size_t nth_update = 0;
+    lepton_foreach_masked_section(mask, section, {
+      patch->updates[nth_update]->update[section][step] =
+        lepton_any_section_plat((bool ***) &apuc->rl, section, lower, upper);
+      nth_update += 1;
+    });
+  });
+
+  return patch;
+}
+
+lepton_gl_t *lepton_gl_from_rl(lepton_apuc_t *apuc, uint16_t mask)
+{
+  size_t num_sections = lepton_count_masked_sections(mask);
+  if (num_sections == 0) {
+    return NULL;
+  }
+
+  lepton_gl_t *gl = malloc(LEPTON_GL_SIZE);
+  memset(gl, true, LEPTON_GL_SIZE);
+
+  lepton_foreach_masked_section(mask, section, {
+    lepton_foreach_rl_plat(plat, {
+      (*gl)[plat] &= apuc->rl[section][plat];
+    });
+  });
+
+  return gl;
+}
+
+lepton_ggl_t *lepton_ggl_from_rl(lepton_apuc_t *apuc, uint16_t mask) {
+  size_t num_sections = lepton_count_masked_sections(mask);
+  if (num_sections == 0) {
+    return NULL;
+  }
+
+  lepton_ggl_t *ggl = malloc(LEPTON_GGL_SIZE);
+  memset(ggl, true, LEPTON_GGL_SIZE);
+
+  lepton_foreach_masked_section(mask, section, {
+    lepton_foreach_rl_plat(plat, {
+      (*ggl)[section / LEPTON_NUM_GROUPS][plat] &= apuc->rl[section][plat];
+    });
+  });
+
+  return ggl;
+}
+
+lepton_l1_patch_t *lepton_l1_from_ggl(lepton_apuc_t *apuc, size_t l1_addr) {
+  lepton_l1_patch_t *patch = malloc(sizeof(lepton_l1_patch_t));
+  patch->src = L1_SRC_GGL;
+  patch->l1_addr = l1_addr;
+  patch->ggl_patch = malloc(sizeof(lepton_ggl_t));
+  memcpy(patch->ggl_patch, &apuc->ggl, LEPTON_GGL_SIZE);
+  return patch;
+}
+
+lepton_lgl_t *lepton_lgl_from_l1(lepton_apuc_t *apuc, size_t l1_addr) {
+  lepton_lgl_t *lgl = malloc(sizeof(lepton_lgl_t));
+
+  size_t bank = (l1_addr >> 11) & 0x3;
+  size_t group = (l1_addr >> 9) & 0x3;
+  size_t row = l1_addr & 0x1FF;
+
+  size_t lower_plat_apc_0;
+  size_t upper_plat_apc_0;
+  size_t lower_plat_apc_1;
+  size_t upper_plat_apc_1;
+  lepton_plats_for_bank(bank, &lower_plat_apc_0, &upper_plat_apc_0,
+                        &lower_plat_apc_1, &upper_plat_apc_1);
+
+  lepton_foreach_range(plat, lower_plat_apc_0, upper_plat_apc_0, {
+    (*lgl)[plat - lower_plat_apc_0] = apuc->l1[row][group][plat];
+  });
+
+  lepton_foreach_range(plat, lower_plat_apc_1, upper_plat_apc_1, {
+    (*lgl)[plat - lower_plat_apc_1 + LEPTON_NUM_PLATS_PER_HALF_BANK * 2] =
+      apuc->l1[row][group][plat];
+  });
+
+  return lgl;
+}
+
+lepton_l2_patch_t *lepton_l2_from_lgl(lepton_apuc_t *apuc, size_t l2_addr) {
+  lepton_l2_patch_t *patch = malloc(sizeof(lepton_l2_patch_t));
+  patch->l2_addr = l2_addr;
+  patch->update = malloc(sizeof(lepton_l2_t));
+  memcpy(patch->update, &apuc->lgl, LEPTON_LGL_SIZE);
+  return patch;
+}
+
+lepton_lgl_t *lepton_lgl_from_l2(lepton_apuc_t *apuc, size_t l2_addr) {
+  lepton_lgl_t *lgl = malloc(sizeof(lepton_lgl_t));
+  memcpy(lgl, &apuc->l2[l2_addr], LEPTON_LGL_SIZE);
+  return lgl;
+}
+
+lepton_l1_patch_t *lepton_l1_from_lgl(lepton_apuc_t *apuc, size_t l1_addr) {
+  lepton_l1_patch_t *patch = malloc(sizeof(lepton_l1_patch_t));
+  patch->src = L1_SRC_LGL;
+  patch->l1_addr = l1_addr;
+  patch->lgl_patch = malloc(sizeof(lepton_lgl_t));
+  memcpy(patch->lgl_patch, &apuc->lgl, LEPTON_LGL_SIZE);
+  return patch;
+}
+
+lepton_ggl_t *lepton_ggl_from_l1(lepton_apuc_t *apuc, size_t l1_addr) {
+  lepton_ggl_t *ggl = malloc(sizeof(lepton_ggl_t));
+  memcpy(ggl, &apuc->l1[l1_addr], LEPTON_GGL_SIZE);
+  return ggl;
+}
+
+lepton_ggl_t *lepton_ggl_from_rl_and_l1(lepton_apuc_t *apuc, size_t mask,
+                                        size_t l1_addr) {
+  lepton_ggl_t *ggl = lepton_ggl_from_rl(apuc, mask);
+  lepton_foreach_l1_group(group, {
+    lepton_foreach_l1_plat(plat, {
+      (*ggl)[group][plat] &= apuc->l1[l1_addr][group][plat];
+    });
+  });
+  return ggl;
+}
+
+size_t lepton_rwinh_set(lepton_apuc_t *apuc, size_t mask) {
+  return mask;
+}
+
+lepton_rwinh_rst_patch_t *lepton_rwinh_rst(lepton_apuc_t *apuc, size_t mask,
+                                           bool has_read) {
+  lepton_rwinh_rst_patch_t *patch = malloc(sizeof(lepton_rwinh_rst_patch_t));
+  patch->mask = mask;
+  patch->has_read = has_read;
+  return patch;
+}
