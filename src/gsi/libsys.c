@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include <gsi/libsys.h>
+#include "libsys.h"
 
 gsi_status_t gsi_libsys_init(const char *argv0, bool log_to_screen) {
     printf("gsi_libsys_init()\n");

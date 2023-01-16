@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-#include <gsi/libgvml.h>
+#include "libgvml.h"
 
 #ifdef __cplusplus
 extern "C" {

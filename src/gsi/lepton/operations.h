@@ -1,8 +1,12 @@
-#ifndef __LEPTON__OPERATIONS_H__
-#define __LEPTON__OPERATIONS_H__
+#ifndef __GSI__LEPTON__OPERATIONS_H__
+#define __GSI__LEPTON__OPERATIONS_H__
 
-#include "gsi/lepton/apuc.h"
-#include "gsi/lepton/constants.h"
+#include "apuc.h"
+#include "constants.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 lepton_wordline_t *lepton_right_in_place(lepton_wordline_t *lhs,
                                          lepton_wordline_t *rhs,
@@ -64,4 +68,8 @@ lepton_wordline_t *lepton_inv_left_and_inv_right_in_place(lepton_wordline_t *lhs
 lepton_wordline_t *lepton_inv_left_and_inv_right(lepton_wordline_t *lhs,
                                                  lepton_wordline_t *rhs);
 
-#endif // __LEPTON__OPERATIONS_H__
+#ifdef __cplusplus
+}
+#endif
+
+#endif // __GSI__LEPTON__OPERATIONS_H__

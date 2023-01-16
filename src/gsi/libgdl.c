@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <gsi/libgdl.h>
+#include "libgdl.h"
 
 // Ours
 

@@ -1,7 +1,7 @@
 #ifndef LEPTON_GSI_GAL_FAST_FUNCS_H
 #define LEPTON_GSI_GAL_FAST_FUNCS_H
 
-#include <gsi/libgal.h>
+#include "libgal.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,5 +1,9 @@
-#ifndef __LEPTON__CONSTANTS_H__
-#define __LEPTON__CONSTANTS_H__
+#ifndef __GSI__LEPTON__CONSTANTS_H__
+#define __GSI__LEPTON__CONSTANTS_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define LEPTON_NUM_SBS 24
 
@@ -15,6 +19,9 @@
 #define LEPTON_MAX_EWE_VALUE 0x2FF
 #define LEPTON_MAX_L1_VALUE ((1 << 13) - 1)
 #define LEPTON_MAX_L2_VALUE ((1 << 7) - 1)
+
+#define LEPTON_NUM_EWE_GROUPS 3
+#define LEPTON_NUM_VRS_PER_EWE_GROUP 8
 
 #define LEPTON_NUM_PLATS_PER_HALF_BANK 2048
 
@@ -62,4 +69,8 @@
 #define LEPTON_NUM_LGL_PLATS (LEPTON_NUM_PLATS_PER_HALF_BANK * 4)
 #define LEPTON_NUM_L2_PLATS LEPTON_NUM_LGL_PLATS
 
-#endif // __LEPTON__CONSTANTS_H__
+#ifdef __cplusplus
+}
+#endif
+
+#endif // __GSI__LEPTON__CONSTANTS_H__

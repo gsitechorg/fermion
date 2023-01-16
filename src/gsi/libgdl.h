@@ -2,7 +2,8 @@
 #define LEPTON_GSI_LIBGDL_H
 
 #include <inttypes.h>
-#include <gsi/libsys.h>
+
+#include "libsys.h"
 
 #ifdef __cplusplus
 extern "C" {
