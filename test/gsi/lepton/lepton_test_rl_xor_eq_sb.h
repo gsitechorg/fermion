@@ -3,6 +3,8 @@
 
 #include <gsi/lepton/apuc.h>
 
+void lepton_test_rl_xor_eq_2_sbs_in_place(lepton_apuc_t *apuc);
+void lepton_test_rl_xor_eq_2_sbs_w_patch(lepton_apuc_t *apuc);
 void lepton_test_rl_xor_eq_sb_in_place(lepton_apuc_t *apuc);
 void lepton_test_rl_xor_eq_sb_w_patch(lepton_apuc_t *apuc);
 void lepton_test_rl_xor_eq_sb(void);

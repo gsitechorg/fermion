@@ -86,7 +86,7 @@ void gvml_cpy_imm_16(enum gvml_vr16 vdst, uint16_t val) {
 }
 
 void gvml_mul_u16(enum gvml_vr16 res, enum gvml_vr16 x, enum gvml_vr16 y) {
-  size_t i;
+  uint32_t i;
 
   apl_set_rn_reg(RN_REG_G0, x);
   apl_set_rn_reg(RN_REG_G1, y);
@@ -129,7 +129,7 @@ belex_gal_vm_reg_to_set_ext(size_t vm_reg, uint32_t *parity_grp_p,
   *parity_row_p = row + (2 * APL_VM_ROWS_PER_U16);
   row += APL_VM_ROWS_PER_U16 * parity_grp;
   *parity_grp_p = parity_grp;
-  return (uint16_t)row;
+  return (uint16_t) row;
 }
 
 static inline __attribute__((always_inline)) uint16_t

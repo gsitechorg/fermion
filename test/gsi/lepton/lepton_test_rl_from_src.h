@@ -5,6 +5,10 @@
 
 void lepton_test_rl_from_src_inv_rl_in_place(lepton_apuc_t *apuc);
 void lepton_test_rl_from_src_inv_rl_w_patch(lepton_apuc_t *apuc);
+void lepton_test_rl_from_src_ggl_in_place(lepton_apuc_t *apuc);
+void lepton_test_rl_from_src_ggl_w_patch(lepton_apuc_t *apuc);
+void lepton_test_rl_from_src_gl_in_place(lepton_apuc_t *apuc);
+void lepton_test_rl_from_src_gl_w_patch(lepton_apuc_t *apuc);
 void lepton_test_rl_from_src(void);
 
 #endif // __LEPTON_TEST_RL_FROM_SRC_H__

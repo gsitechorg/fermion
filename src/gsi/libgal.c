@@ -8,9 +8,11 @@
 extern lepton_apuc_t *apuc;
 
 void gal_fast_l2dma_async_memcpy_end(uint32_t apc_id) {
+  // nothing to do
 }
 
 void gal_fast_l2dma_l2_ready_rst_all() {
+  // nothing to do
 }
 
 void gal_fast_l2dma_l2_to_mem_start(uint32_t apc_id,
@@ -33,9 +35,9 @@ void gal_fast_l2dma_l2_to_mem_start(uint32_t apc_id,
             for (size_t l4_plat = lower_l4_plat,
                         l2_plat = apc_id * LEPTON_NUM_PLATS_PER_HALF_BANK * 2;
                  l4_plat < upper_l4_plat; l4_plat += 1, l2_plat += 1) {
-                /* p[l4_plat] = (p[l4_plat] ^ (p[l4_plat] & (1 << section))) | */
-                /*              (apuc->l2[l2_addr][l2_plat] << section); */
-                p[l4_plat] |= (apuc->l2[l2_addr][l2_plat] << section);
+                p[l4_plat] = (p[l4_plat] ^ (p[l4_plat] & (1 << section))) |
+                             (apuc->l2[l2_addr][l2_plat] << section);
+                /* p[l4_plat] |= (apuc->l2[l2_addr][l2_plat] << section); */
             }
         }
     }

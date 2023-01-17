@@ -25,96 +25,123 @@
     lepton_free_apuc(apuc);                                                    \
   }
 
-#define LEPTON_ASSERT_VR_EQ(actual, expected)                                    \
-  if (LEPTON_TEST_PASSED) {                                                      \
-    lepton_foreach_vr_section_plat(section, plat, {                              \
-      bool actual_value = (*actual)[section][plat];                              \
-      bool expected_value = (*expected)[section][plat];                          \
-      if (actual_value != expected_value) {                                      \
-        LEPTON_FAIL_TEST("Expected " #actual "[%zu][%zu] to be %d but was %d\n", \
-                         section, plat, actual_value, expected_value);           \
-        goto assertion_done;                                                     \
-      }                                                                          \
-    });                                                                          \
-    assertion_done:                                                              \
-    ;;                                                                           \
+#define LEPTON_ASSERT_VR_EQ(actual, expected)                                  \
+  if (LEPTON_TEST_PASSED) {                                                    \
+    lepton_foreach_vr_section_plat(section, plat, {                            \
+      bool actual_value = (*actual)[section][plat];                            \
+      bool expected_value = (*expected)[section][plat];                        \
+      if (actual_value != expected_value) {                                    \
+        LEPTON_FAIL_TEST("Expected " #actual                                   \
+                         "[%zu][%zu] to be %d but was %d\n",                   \
+                         section, plat, expected_value, actual_value);         \
+        goto assertion_done;                                                   \
+      }                                                                        \
+    });                                                                        \
+  assertion_done:;                                                             \
+    ;                                                                          \
   }
 
-#define LEPTON_ASSERT_VR_EQ_GL(actual, expected)                                 \
-  if (LEPTON_TEST_PASSED) {                                                      \
-    lepton_foreach_vr_section_plat(section, plat, {                              \
-      bool actual_value = (*actual)[section][plat];                              \
-      bool expected_value = (*expected)[plat];                                   \
-      if (actual_value != expected_value) {                                      \
-        LEPTON_FAIL_TEST("Expected " #actual "[%zu][%zu] to be %d but was %d\n", \
-                         section, plat, actual_value, expected_value);           \
-        goto assertion_done;                                                     \
-      }                                                                          \
-    });                                                                          \
-    assertion_done:                                                              \
-    ;;                                                                           \
+#define LEPTON_ASSERT_VR_EQ_GL(actual, expected)                               \
+  if (LEPTON_TEST_PASSED) {                                                    \
+    lepton_foreach_vr_section_plat(section, plat, {                            \
+      bool actual_value = (*actual)[section][plat];                            \
+      bool expected_value = (*expected)[plat];                                 \
+      if (actual_value != expected_value) {                                    \
+        LEPTON_FAIL_TEST("Expected " #actual                                   \
+                         "[%zu][%zu] to be %d but was %d\n",                   \
+                         section, plat, expected_value, actual_value);         \
+        goto assertion_done;                                                   \
+      }                                                                        \
+    });                                                                        \
+  assertion_done:;                                                             \
+    ;                                                                          \
   }
 
-#define LEPTON_ASSERT_VR_EQ_GGL(actual, expected)                                \
-  if (LEPTON_TEST_PASSED) {                                                      \
-    lepton_foreach_vr_section_plat(section, plat, {                              \
-      bool actual_value = (*actual)[section][plat];                              \
-      bool expected_value = (*expected)[section / LEPTON_NUM_GROUPS][plat];      \
-      if (actual_value != expected_value) {                                      \
-        LEPTON_FAIL_TEST("Expected " #actual "[%zu][%zu] to be %d but was %d\n", \
-                         section, plat, actual_value, expected_value);           \
-        goto assertion_done;                                                     \
-      }                                                                          \
-    });                                                                          \
-    assertion_done:                                                              \
-    ;;                                                                           \
+#define LEPTON_ASSERT_VR_EQ_GGL(actual, expected)                              \
+  if (LEPTON_TEST_PASSED) {                                                    \
+    lepton_foreach_vr_section_plat(section, plat, {                            \
+      bool actual_value = (*actual)[section][plat];                            \
+      bool expected_value = (*expected)[section / LEPTON_NUM_GROUPS][plat];    \
+      if (actual_value != expected_value) {                                    \
+        LEPTON_FAIL_TEST("Expected " #actual                                   \
+                         "[%zu][%zu] to be %d but was %d\n",                   \
+                         section, plat, expected_value, actual_value);         \
+        goto assertion_done;                                                   \
+      }                                                                        \
+    });                                                                        \
+  assertion_done:;                                                             \
+    ;                                                                          \
   }
 
-#define LEPTON_ASSERT_VR_EQ_RSP16(actual, expected)                              \
-  if (LEPTON_TEST_PASSED) {                                                      \
-    lepton_foreach_vr_section_plat(section, plat, {                              \
-      bool actual_value = (*actual)[section][plat];                              \
-      bool expected_value = (*expected)[section][plat / 16];                     \
-      if (actual_value != expected_value) {                                      \
-        LEPTON_FAIL_TEST("Expected " #actual "[%zu][%zu] to be %d but was %d\n", \
-               section, plat, actual_value, expected_value);                     \
-        goto assertion_done;                                                     \
-      }                                                                          \
-    });                                                                          \
-    assertion_done:                                                              \
-    ;;                                                                           \
+#define LEPTON_ASSERT_VR_EQ_RSP16(actual, expected)                            \
+  if (LEPTON_TEST_PASSED) {                                                    \
+    lepton_foreach_vr_section_plat(section, plat, {                            \
+      bool actual_value = (*actual)[section][plat];                            \
+      bool expected_value = (*expected)[section][plat / 16];                   \
+      if (actual_value != expected_value) {                                    \
+        LEPTON_FAIL_TEST("Expected " #actual                                   \
+                         "[%zu][%zu] to be %d but was %d\n",                   \
+                         section, plat, expected_value, actual_value);         \
+        goto assertion_done;                                                   \
+      }                                                                        \
+    });                                                                        \
+  assertion_done:;                                                             \
+    ;                                                                          \
   }
 
-#define LEPTON_ASSERT_GGL_EQ(actual, expected)                                   \
-  if (LEPTON_TEST_PASSED) {                                                      \
-    lepton_foreach_ggl_group_plat(group, plat, {                                 \
-      bool actual_value = (*actual)[group][plat];                                \
-      bool expected_value = (*expected)[group][plat];                            \
-      if (actual_value != expected_value) {                                      \
-        LEPTON_FAIL_TEST("Expected " #actual "[%zu][%zu] to be %d but was %d\n", \
-                         group, plat, actual_value, expected_value);             \
-        goto assertion_done;                                                     \
-      }                                                                          \
-    });                                                                          \
-    assertion_done:                                                              \
-    ;;                                                                           \
+#define LEPTON_ASSERT_GGL_EQ(actual, expected)                                 \
+  if (LEPTON_TEST_PASSED) {                                                    \
+    lepton_foreach_ggl_group_plat(group, plat, {                               \
+      bool actual_value = (*actual)[group][plat];                              \
+      bool expected_value = (*expected)[group][plat];                          \
+      if (actual_value != expected_value) {                                    \
+        LEPTON_FAIL_TEST("Expected " #actual                                   \
+                         "[%zu][%zu] to be %d but was %d\n",                   \
+                         group, plat, expected_value, actual_value);           \
+        goto assertion_done;                                                   \
+      }                                                                        \
+    });                                                                        \
+  assertion_done:                                                              \
+    ;;                                                                         \
   }
 
-#define LEPTON_ASSERT_GL_EQ(actual, expected)                               \
-  if (LEPTON_TEST_PASSED) {                                                 \
-    lepton_foreach_gl_plat(plat, {                                          \
-      bool actual_value = (*actual)[plat];                                  \
-      bool expected_value = (*expected)[plat];                              \
-      if (actual_value != expected_value) {                                 \
-        LEPTON_FAIL_TEST("Expected " #actual "[%zu] to be %d but was %d\n", \
-                         plat, actual_value, expected_value);               \
-        goto assertion_done;                                                \
-      }                                                                     \
-    });                                                                     \
-    assertion_done:                                                         \
-    ;;                                                                      \
+#define LEPTON_ASSERT_GL_EQ(actual, expected)                                  \
+  if (LEPTON_TEST_PASSED) {                                                    \
+    lepton_foreach_gl_plat(plat, {                                             \
+      bool actual_value = (*actual)[plat];                                     \
+      bool expected_value = (*expected)[plat];                                 \
+      if (actual_value != expected_value) {                                    \
+        LEPTON_FAIL_TEST("Expected " #actual "[%zu] to be %d but was %d\n",    \
+                         plat, expected_value, actual_value);                  \
+        goto assertion_done;                                                   \
+      }                                                                        \
+    });                                                                        \
+  assertion_done:;                                                             \
+    ;                                                                          \
   }
 
+#define LEPTON_ASSERT_L1_EQ LEPTON_ASSERT_GGL_EQ
+
+#define LEPTON_ASSERT_L2_EQ(actual, expected)                                  \
+  if (LEPTON_TEST_PASSED) {                                                    \
+    lepton_foreach_l2_plat(plat, {                                             \
+      bool actual_value = (*actual)[plat];                                     \
+      bool expected_value = (*expected)[plat];                                 \
+      if (actual_value != expected_value) {                                    \
+        LEPTON_FAIL_TEST("Expected " #actual "[%zu] to be %d but was %d\n",    \
+                         plat, expected_value, actual_value);                  \
+        goto end_of_assertion;                                                 \
+      }                                                                        \
+    });                                                                        \
+  end_of_assertion:                                                            \
+    ;;                                                                         \
+  }
+
+#define LEPTON_ASSERT_LGL_EQ LEPTON_ASSERT_L2_EQ
+
+void lepton_test_plats_for_bank(lepton_apuc_t *apuc);
+void lepton_test_foreach_bank_plat(lepton_apuc_t *apuc);
+void lepton_test_foreach_masked_section(lepton_apuc_t *apuc);
 void lepton_test_apuc(void);
 
 #endif // __LEPTON_TEST_APUC_H__

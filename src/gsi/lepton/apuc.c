@@ -74,19 +74,19 @@ void lepton_patch_whole_l1(lepton_apuc_t *apuc,
   }
 }
 
+#include <stdio.h>
 void lepton_patch_l1(lepton_apuc_t *apuc, lepton_l1_patch_t *patch) {
   size_t l1_addr = patch->l1_addr;
   switch (patch->src) {
-  case L1_SRC_GGL: {
-    memcpy(&apuc->l1[l1_addr], &patch->ggl_patch, LEPTON_GGL_SIZE);
+  case LEPTON_L1_SRC_GGL: {
+    memcpy(&apuc->l1[l1_addr], patch->ggl_patch, LEPTON_GGL_SIZE);
     break;
   }
-  case L1_SRC_LGL: {
-    size_t bank = (l1_addr >> 11) & 0x3;
-    size_t group = (l1_addr >> 9) & 0x3;
-    size_t row = l1_addr & 0x1FF;
+  case LEPTON_L1_SRC_LGL: {
+    size_t bank, group, row;
+    lepton_bank_group_row(l1_addr, &bank, &group, &row);
     lepton_foreach_bank_plat(bank, lgl_plat, l1_plat, {
-      apuc->l1[row][group][l1_plat] = patch->lgl_patch[lgl_plat];
+      apuc->l1[row][group][l1_plat] = (*patch->lgl_patch)[lgl_plat];
     });
     break;
   }
@@ -105,7 +105,7 @@ void lepton_patch_whole_l2(lepton_apuc_t *apuc,
 
 void lepton_patch_l2(lepton_apuc_t *apuc, lepton_l2_patch_t *patch) {
   size_t l2_addr = patch->l2_addr;
-  memcpy(&apuc->l2[l2_addr], &patch->update, LEPTON_L2_SIZE);
+  memcpy(&apuc->l2[l2_addr], patch->update, LEPTON_L2_SIZE);
 }
 
 void lepton_patch_rsp16(lepton_apuc_t *apuc, lepton_rsp16_t *patch) {
@@ -369,10 +369,10 @@ void lepton_free_wordline_map(lepton_wordline_map_t *patches) {
 void lepton_free_l1_patch(lepton_l1_patch_t *patch) {
   if (patch != NULL) {
     switch (patch->src) {
-    case L1_SRC_GGL:
+    case LEPTON_L1_SRC_GGL:
       lepton_free_ggl(patch->ggl_patch);
       break;
-    case L1_SRC_LGL:
+    case LEPTON_L1_SRC_LGL:
       lepton_free_lgl(patch->lgl_patch);
       break;
     }
@@ -597,6 +597,13 @@ lepton_lgl_t *lepton_reset_lgl(lepton_apuc_t *apuc) {
   }
 
   return NULL;
+}
+
+void lepton_bank_group_row(size_t l1_addr, size_t *bank, size_t *group,
+                           size_t *row) {
+  *bank = (l1_addr >> 11) & 0x3;
+  *group = (l1_addr >> 9) & 0x3;
+  *row = l1_addr & 0x1FF;
 }
 
 bool lepton_any_section_plat(bool ***data, size_t section, size_t lower,
@@ -2707,7 +2714,7 @@ lepton_l1_patch_t *lepton_l1_from_ggl(lepton_apuc_t *apuc, size_t l1_addr) {
     return NULL;
   }
   lepton_l1_patch_t *patch = malloc(sizeof(lepton_l1_patch_t));
-  patch->src = L1_SRC_GGL;
+  patch->src = LEPTON_L1_SRC_GGL;
   patch->l1_addr = l1_addr;
   patch->ggl_patch = malloc(sizeof(lepton_ggl_t));
   memcpy(patch->ggl_patch, &apuc->ggl, LEPTON_GGL_SIZE);
@@ -2715,9 +2722,8 @@ lepton_l1_patch_t *lepton_l1_from_ggl(lepton_apuc_t *apuc, size_t l1_addr) {
 }
 
 void lepton_lgl_from_l1_in_place(lepton_apuc_t *apuc, size_t l1_addr) {
-  size_t bank = (l1_addr >> 11) & 0x3;
-  size_t group = (l1_addr >> 9) & 0x3;
-  size_t row = l1_addr & 0x1FF;
+  size_t bank, group, row;
+  lepton_bank_group_row(l1_addr, &bank, &group, &row);
   lepton_foreach_bank_plat(bank, lgl_plat, l1_plat, {
     apuc->lgl[lgl_plat] = apuc->l1[row][group][l1_plat];
   });
@@ -2731,9 +2737,8 @@ lepton_lgl_t *lepton_lgl_from_l1(lepton_apuc_t *apuc, size_t l1_addr) {
 
   lepton_lgl_t *lgl = malloc(sizeof(lepton_lgl_t));
 
-  size_t bank = (l1_addr >> 11) & 0x3;
-  size_t group = (l1_addr >> 9) & 0x3;
-  size_t row = l1_addr & 0x1FF;
+  size_t bank, group, row;
+  lepton_bank_group_row(l1_addr, &bank, &group, &row);
   lepton_foreach_bank_plat(bank, lgl_plat, l1_plat, {
     (*lgl)[lgl_plat] = apuc->l1[row][group][l1_plat];
   });
@@ -2772,9 +2777,8 @@ lepton_lgl_t *lepton_lgl_from_l2(lepton_apuc_t *apuc, size_t l2_addr) {
 }
 
 void lepton_l1_from_lgl_in_place(lepton_apuc_t *apuc, size_t l1_addr) {
-  size_t bank = (l1_addr >> 11) & 0x3;
-  size_t group = (l1_addr >> 9) & 0x3;
-  size_t row = l1_addr & 0x1FF;
+  size_t bank, group, row;
+  lepton_bank_group_row(l1_addr, &bank, &group, &row);
   lepton_foreach_bank_plat(bank, lgl_plat, l1_plat, {
     apuc->l1[row][group][l1_plat] = apuc->lgl[lgl_plat];
   });
@@ -2786,7 +2790,7 @@ lepton_l1_patch_t *lepton_l1_from_lgl(lepton_apuc_t *apuc, size_t l1_addr) {
     return NULL;
   }
   lepton_l1_patch_t *patch = malloc(sizeof(lepton_l1_patch_t));
-  patch->src = L1_SRC_LGL;
+  patch->src = LEPTON_L1_SRC_LGL;
   patch->l1_addr = l1_addr;
   patch->lgl_patch = malloc(sizeof(lepton_lgl_t));
   memcpy(patch->lgl_patch, &apuc->lgl, LEPTON_LGL_SIZE);

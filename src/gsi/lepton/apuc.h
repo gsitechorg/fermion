@@ -156,6 +156,9 @@
 #define lepton_foreach_half_bank(half_bank, block) \
   lepton_foreach_range(half_bank, LEPTON_NUM_HALF_BANKS_PER_APUC, block)
 
+void lepton_bank_group_row(size_t l1_addr, size_t *bank, size_t *group,
+                           size_t *row);
+
 #define lepton_foreach_bank_plat(bank, lgl_plat, l1_plat, block)            \
   {                                                                         \
     size_t lower_plat_apc_0;                                                \
@@ -255,8 +258,8 @@ typedef struct lepton_wordline_map_t {
 } lepton_wordline_map_t;
 
 typedef enum {
-  L1_SRC_GGL,
-  L1_SRC_LGL,
+  LEPTON_L1_SRC_GGL,
+  LEPTON_L1_SRC_LGL,
 } lepton_l1_patch_src;
 
 typedef struct lepton_l1_patch_t {

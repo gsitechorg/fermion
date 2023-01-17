@@ -19,10 +19,9 @@ void lepton_test_gvml_add_u16() {
     });
     expected = (uint16_t) (((uint32_t) lhs + (uint32_t) rhs) & 0xFFFF);
     if (actual != expected) {
-      printf("%s:%d: Expected apuc->vrs[0][:][%zu] = (0x%04X + 0x%04X) to be "
-             "0x%04X but was 0x%04X\n",
-             __FILE__, __LINE__, plat, lhs, rhs, expected, actual);
-      LEPTON_TEST_PASSED = false;
+      LEPTON_FAIL_TEST("Expected apuc->vrs[0][:][%zu] = (0x%04X + 0x%04X) "
+                       "to be 0x%04X but was 0x%04X\n",
+                       plat, lhs, rhs, expected, actual);
       break;
     }
   });

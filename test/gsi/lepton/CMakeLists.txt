@@ -1,11 +1,18 @@
 target_sources(test-lepton PUBLIC
+  lepton_test_ggl_from_l1.c
   lepton_test_ggl_from_rl.c
   lepton_test_gl_from_rl.c
+  lepton_test_l1_from_ggl.c
+  lepton_test_l1_from_lgl.c
+  lepton_test_l2_from_lgl.c
+  lepton_test_lgl_from_l1.c
+  lepton_test_lgl_from_l2.c
   lepton_test_rl_from_sb.c
   lepton_test_rl_from_sb_or_src.c
   lepton_test_rl_from_src.c
   lepton_test_rl_or_eq_sb.c
   lepton_test_rl_xor_eq_sb.c
+  lepton_test_rl_xor_eq_src.c
   lepton_test_sb_from_src.c
   lepton_test_src.c
   lepton_test_apuc.c
