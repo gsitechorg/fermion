@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "lepton/apuc.h"
 #include "lepton/constants.h"
 #include "libgal.h"
@@ -35,9 +33,8 @@ void gal_fast_l2dma_l2_to_mem_start(uint32_t apc_id,
             for (size_t l4_plat = lower_l4_plat,
                         l2_plat = apc_id * LEPTON_NUM_PLATS_PER_HALF_BANK * 2;
                  l4_plat < upper_l4_plat; l4_plat += 1, l2_plat += 1) {
-                p[l4_plat] = (p[l4_plat] ^ (p[l4_plat] & (1 << section))) |
-                             (apuc->l2[l2_addr][l2_plat] << section);
-                /* p[l4_plat] |= (apuc->l2[l2_addr][l2_plat] << section); */
+              p[l4_plat] = (p[l4_plat] ^ (p[l4_plat] & (1 << section))) |
+                           (apuc->l2[l2_addr][l2_plat] << section);
             }
         }
     }
@@ -63,7 +60,7 @@ void gal_fast_l2dma_mem_to_l2_start(uint32_t apc_id,
             for (size_t l4_plat = lower_l4_plat,
                         l2_plat = apc_id * LEPTON_NUM_PLATS_PER_HALF_BANK * 2;
                  l4_plat < upper_l4_plat; l4_plat += 1, l2_plat += 1) {
-                apuc->l2[l2_addr][l2_plat] = (p[l4_plat] & (1 << section)) != 0x0000;
+                apuc->l2[l2_addr][l2_plat] = (p[l4_plat] & (1 << section));
             }
         }
     }

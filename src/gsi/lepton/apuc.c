@@ -74,7 +74,6 @@ void lepton_patch_whole_l1(lepton_apuc_t *apuc,
   }
 }
 
-#include <stdio.h>
 void lepton_patch_l1(lepton_apuc_t *apuc, lepton_l1_patch_t *patch) {
   size_t l1_addr = patch->l1_addr;
   switch (patch->src) {

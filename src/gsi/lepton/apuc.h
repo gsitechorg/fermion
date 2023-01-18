@@ -45,7 +45,7 @@
   lepton_foreach_range(section, LEPTON_NUM_SECTIONS, block)
 
 #define lepton_foreach_vr_plat(plat, block) \
-  lepton_foreach_range(plat, LEPTON_NUM_PLATS_PER_HALF_BANK, block)
+  lepton_foreach_range(plat, LEPTON_NUM_PLATS_PER_APUC, block)
 
 #define lepton_foreach_vr_section_plat(section, plat, block) \
   lepton_foreach_vr_section(section, {                       \
@@ -64,7 +64,7 @@
 #define lepton_foreach_rl_section_plat lepton_foreach_vr_section_plat
 
 #define lepton_foreach_gl_plat(plat, block) \
-  lepton_foreach_range(plat, LEPTON_NUM_PLATS_PER_HALF_BANK, block)
+  lepton_foreach_range(plat, LEPTON_NUM_PLATS_PER_APUC, block)
 
 #define lepton_foreach_ggl_group(group, block) \
   lepton_foreach_range(group, LEPTON_NUM_GROUPS, block)
