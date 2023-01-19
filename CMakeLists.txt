@@ -33,9 +33,9 @@ add_library(gsilepton
     src/gsi/libgdl.c
     src/gsi/libsys.c
 )
-target_include_directories(gsilepton PRIVATE
+target_include_directories(gsilepton PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
-  "${CMAKE_BINARY_DIR}/gensrc/"
+  "${CMAKE_BINARY_DIR}/gensrc"
 )
 
 install(TARGETS gsilepton
