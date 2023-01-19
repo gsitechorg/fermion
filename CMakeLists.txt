@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.13.4 FATAL_ERROR)
-project(lepton LANGUAGES C)
-
+project(lepton LANGUAGES C CXX)
 
 find_program(BELEX_AOT belex-aot)
 message("belex-aot: ${BELEX_AOT}")

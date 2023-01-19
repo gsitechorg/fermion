@@ -1,15 +1,15 @@
 #ifndef __GSI__LEPTON__APUC_H__
 #define __GSI__LEPTON__APUC_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 
 #include "constants.h"
-
-/* #ifdef __cplusplus */
-/* extern "C" { */
-/* #endif */
 
 #define LEPTON_FOREACH_RANGE_3(var, lower, upper, step_size, block) \
   for (size_t var = lower; var < upper; var += step_size) {         \
@@ -1300,8 +1300,8 @@ lepton_rwinh_rst_patch_t *lepton_rwinh_rst(lepton_apuc_t *apuc, size_t mask,
 void lepton_randomize_apuc(lepton_apuc_t *apuc, uint32_t seed);
 void lepton_repeatably_randomize_apuc(lepton_apuc_t *apuc);
 
-/* #ifdef __cplusplus */
-/* } */
-/* #endif */
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __GSI__LEPTON__APUC_H__

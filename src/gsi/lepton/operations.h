@@ -1,12 +1,12 @@
 #ifndef __GSI__LEPTON__OPERATIONS_H__
 #define __GSI__LEPTON__OPERATIONS_H__
 
-#include "apuc.h"
-#include "constants.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "apuc.h"
+#include "constants.h"
 
 lepton_wordline_t *lepton_right_in_place(lepton_wordline_t *lhs,
                                          lepton_wordline_t *rhs,

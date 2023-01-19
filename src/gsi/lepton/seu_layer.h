@@ -1,14 +1,14 @@
 #ifndef __GSI__LEPTON__SEU_LAYER_H__
 #define __GSI__LEPTON__SEU_LAYER_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #include "apuc.h"
 #include "constants.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define lepton_foreach_rn_reg(rn_reg, block)                                   \
   lepton_foreach_range(rn_reg, LEPTON_NUM_RN_REGS, block)
