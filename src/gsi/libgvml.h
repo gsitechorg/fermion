@@ -112,8 +112,8 @@ enum gvml_vm_reg {
     GVML_VM_47  = 47,
 };
 
-extern lepton_apuc_t *apuc;
-extern lepton_seu_layer_t *seu_layer;
+extern lepton_apuc_t apuc;
+extern lepton_seu_layer_t seu_layer;
 
 void lepton_init(void);
 void lepton_exit(void);

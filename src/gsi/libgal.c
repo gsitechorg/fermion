@@ -1,9 +1,11 @@
+#include <stdio.h>
+
 #include "lepton/apuc.h"
 #include "lepton/constants.h"
 #include "libgal.h"
 #include "gal-fast-funcs.h"
 
-extern lepton_apuc_t *apuc;
+extern lepton_apuc_t apuc;
 
 void gal_fast_l2dma_async_memcpy_end(uint32_t apc_id) {
   // nothing to do
@@ -21,8 +23,7 @@ void gal_fast_l2dma_l2_to_mem_start(uint32_t apc_id,
     uint16_t *p = transactions->l4_addr;
     for (size_t l2_byte = 0; l2_byte < 8; l2_byte += 1) {
         size_t bank = l2_byte / 2;
-        size_t lower_l4_plat = (apc_id * LEPTON_NUM_PLATS_PER_APC) +
-                               (bank * LEPTON_NUM_PLATS_PER_HALF_BANK * 2);
+        size_t lower_l4_plat = (bank * LEPTON_NUM_PLATS_PER_HALF_BANK * 2);
         size_t upper_l4_plat =
             lower_l4_plat + (LEPTON_NUM_PLATS_PER_HALF_BANK * 2);
         for (size_t l2_offset = 0; l2_offset < 8; l2_offset += 1) {
@@ -34,7 +35,7 @@ void gal_fast_l2dma_l2_to_mem_start(uint32_t apc_id,
                         l2_plat = apc_id * LEPTON_NUM_PLATS_PER_HALF_BANK * 2;
                  l4_plat < upper_l4_plat; l4_plat += 1, l2_plat += 1) {
               p[l4_plat] = (p[l4_plat] ^ (p[l4_plat] & (1 << section))) |
-                           (apuc->l2[l2_addr][l2_plat] << section);
+                           (apuc.l2[l2_addr][l2_plat] << section);
             }
         }
     }
@@ -48,20 +49,20 @@ void gal_fast_l2dma_mem_to_l2_start(uint32_t apc_id,
     uint16_t *p = transactions->l4_addr;
     for (size_t l2_byte = 0; l2_byte < 8; l2_byte += 1) {
         size_t bank = l2_byte / 2;
-        size_t lower_l4_plat = (apc_id * LEPTON_NUM_PLATS_PER_APC) +
-                               (bank * LEPTON_NUM_PLATS_PER_HALF_BANK * 2);
+        size_t lower_l4_plat = (bank * LEPTON_NUM_PLATS_PER_HALF_BANK * 2);
         size_t upper_l4_plat =
             lower_l4_plat + (LEPTON_NUM_PLATS_PER_HALF_BANK * 2);
+
         for (size_t l2_offset = 0; l2_offset < 8; l2_offset += 1) {
-            size_t l2_addr = l2_byte * 16 + l2_offset;
-            size_t group = 2 * (l2_byte % 2) + (l2_offset / 4);
-            size_t row = l2_offset % 4;
-            size_t section = group * 4 + row;
-            for (size_t l4_plat = lower_l4_plat,
-                        l2_plat = apc_id * LEPTON_NUM_PLATS_PER_HALF_BANK * 2;
-                 l4_plat < upper_l4_plat; l4_plat += 1, l2_plat += 1) {
-                apuc->l2[l2_addr][l2_plat] = (p[l4_plat] & (1 << section));
-            }
+          size_t l2_addr = l2_byte * 16 + l2_offset;
+          size_t group = 2 * (l2_byte % 2) + (l2_offset / 4);
+          size_t row = l2_offset % 4;
+          size_t section = group * 4 + row;
+          for (size_t l4_plat = lower_l4_plat,
+                      l2_plat = apc_id * LEPTON_NUM_PLATS_PER_HALF_BANK * 2;
+               l4_plat < upper_l4_plat; l4_plat += 1, l2_plat += 1) {
+            apuc.l2[l2_addr][l2_plat] = (p[l4_plat] & (1 << section));
+          }
         }
     }
 }

@@ -8,15 +8,15 @@
 #include "libgvml_element_wise.h"
 #include "libgvml_memory.h"
 
-lepton_apuc_t *apuc = NULL;
-lepton_seu_layer_t *seu_layer = NULL;
+lepton_apuc_t apuc;
+lepton_seu_layer_t seu_layer;
 
 void lepton_init() {
-  apuc = malloc(sizeof(lepton_apuc_t));
-  lepton_init_apuc(apuc);
+  /* apuc = malloc(sizeof(lepton_apuc_t)); */
+  lepton_init_apuc(&apuc);
 
-  seu_layer = malloc(sizeof(lepton_seu_layer_t));
-  lepton_init_seu_layer(seu_layer);
+  /* seu_layer = malloc(sizeof(lepton_seu_layer_t)); */
+  lepton_init_seu_layer(&seu_layer);
 }
 
 int gvml_apl_init() {
@@ -60,11 +60,13 @@ void gvml_init_once() {
 }
 
 void lepton_exit() {
-  lepton_free_apuc(apuc);
-  apuc = (lepton_apuc_t *) NULL;
+  /* printf("lepton_free_apuc(apuc)\n"); */
+  /* lepton_free_apuc(apuc); */
+  /* apuc = (lepton_apuc_t *) NULL; */
 
-  lepton_free_seu_layer(seu_layer);
-  seu_layer = (lepton_seu_layer_t *) NULL;
+  /* printf("lepton_free_seu_layer(seu_layer)\n"); */
+  /* lepton_free_seu_layer(seu_layer); */
+  /* seu_layer = (lepton_seu_layer_t *) NULL; */
 }
 
 void gvml_exit() {

@@ -15,4 +15,17 @@ extern bool LEPTON_TEST_PASSED;
     LEPTON_TEST_PASSED = false;                                                \
   }
 
+#define LEPTON_RUN_TEST(test_fn)                                               \
+  {                                                                            \
+    LEPTON_NUM_TESTS += 1;                                                     \
+    LEPTON_TEST_PASSED = true;                                                 \
+    test_fn();                                                                 \
+    if (LEPTON_TEST_PASSED) {                                                  \
+      printf("[SUCCESS] " #test_fn "\n");                                      \
+    } else {                                                                   \
+      LEPTON_NUM_FAILED_TESTS += 1;                                            \
+      printf("[FAILURE] " #test_fn "\n");                                      \
+    }                                                                          \
+  }
+
 #endif // __TEST_LEPTON_H__

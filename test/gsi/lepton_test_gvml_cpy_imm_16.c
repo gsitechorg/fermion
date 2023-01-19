@@ -12,12 +12,12 @@ void lepton_test_gvml_cpy_imm_16() {
   lepton_foreach_vr_plat(plat, {
     uint16_t value = 0x0000;
     lepton_foreach_vr_section(section, {
-      value |= (apuc->vrs[0][section][plat] << section);
+      value |= (apuc.vrs[0][section][plat] << section);
     });
     if (value != 0xBEEF) {
-      printf("%s:%d: Expected apuc->vrs[0][:][%zu] to be 0xBEEF but was 0x%04X\n",
-             __FILE__, __LINE__, plat, value);
-      LEPTON_TEST_PASSED = false;
+      LEPTON_FAIL_TEST(
+          "Expected apuc.vrs[0][:][%zu] to be 0xBEEF but was 0x%04X\n", plat,
+          value);
       break;
     }
   });

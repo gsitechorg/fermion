@@ -34,6 +34,7 @@ void lepton_test_gal_mem_to_l2_to_mem() {
 
   transactions.l4_addr = p;
   gal_fast_l2dma_mem_to_l2_start(0, 1, &transactions, GAL_L2DMA_L2_READY_SET);
+  transactions.l4_addr = p + LEPTON_NUM_PLATS_PER_APC;
   gal_fast_l2dma_mem_to_l2_start(1, 1, &transactions, GAL_L2DMA_L2_READY_SET);
 
   my_dma_l2_to_l1_32k(GVML_VM_0);
@@ -44,6 +45,7 @@ void lepton_test_gal_mem_to_l2_to_mem() {
   uint16_t *q = malloc(LEPTON_NUM_PLATS_PER_APUC * sizeof(uint16_t));
   transactions.l4_addr = q;
   gal_fast_l2dma_l2_to_mem_start(0, 1, &transactions, GAL_L2DMA_L2_READY_SET);
+  transactions.l4_addr = q + LEPTON_NUM_PLATS_PER_APC;
   gal_fast_l2dma_l2_to_mem_start(1, 1, &transactions, GAL_L2DMA_L2_READY_SET);
 
   for (size_t i = 0; i < LEPTON_NUM_PLATS_PER_APUC; i += 1) {
@@ -54,8 +56,8 @@ void lepton_test_gal_mem_to_l2_to_mem() {
     }
   }
 
-  free(p);
   free(q);
+  free(p);
 }
 
 void lepton_test_libgal() {

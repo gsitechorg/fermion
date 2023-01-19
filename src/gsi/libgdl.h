@@ -40,6 +40,8 @@ enum {
 typedef uintptr_t gdl_context_handle_t;
 typedef uintptr_t gdl_mem_handle_t;
 
+#define GDL_MEM_HANDLE_NULL ((const gdl_mem_handle_t){ 0 })
+
 typedef enum {
     GDL_CONTEXT_READY,
     GDL_CONTEXT_BUSY,
