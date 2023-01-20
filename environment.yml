@@ -1,0 +1,10 @@
+name: lepton
+channels:
+  - conda-forge
+  - gsi
+dependencies:
+  - belex=2022.09.20
+  - belex-libs=2022.05.10
+  - clang=15.0.6
+  - cmake=3.25.1
+  - gtest=1.12.1
