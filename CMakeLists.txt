@@ -6,12 +6,12 @@ message("belex-aot: ${BELEX_AOT}")
 
 add_custom_command(
     OUTPUT
-        "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/fragments.c"
-        "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/fragments.h"
+        "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.c"
+        "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.h"
     COMMAND "${BELEX_AOT}"
         -O0
-        --source-file "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/fragments.c"
-        --header-file "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/fragments.h"
+        --source-file "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.c"
+        --header-file "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.h"
         --target lepton
         --no-uniquify-nyms
         "${CMAKE_SOURCE_DIR}/src/gsi/lepton/fragments.py"
@@ -25,7 +25,7 @@ add_library(gsilepton
     src/gsi/lepton/operations.c
     src/gsi/lepton/apuc.c
     src/gsi/lepton/seu_layer.c
-    "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/fragments.c"
+    "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.c"
     src/gsi/libapl.c
     src/gsi/libgal.c
     src/gsi/libgvml.c

@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include <gsi/lepton/fragments.h>
+#include <gsi/lepton/gvml_fragments.h>
 
 #include "libapl.h"
 #include "libgvml.h"
