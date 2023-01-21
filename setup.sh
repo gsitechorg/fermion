@@ -11,7 +11,9 @@ EXIT_INSTALL_FAILED=5
 
 declare PRINT_HELP
 declare INSTALL_PREFIX
-BUILD_TESTS=true
+declare INSTALL_LEPTON
+
+BUILD_TESTS=false
 BUILD_TYPE=Debug
 NUM_CORES=1
 
@@ -22,11 +24,12 @@ function print-help {
 Software emulator for the GSI APU and libraries like libs-gvml and sys-apu.
 
 Options:
-  -h|--help     Print this help text.
-  --prefix      Specify the installation prefix (default: /usr/local)
-  --no-tests    Do not build the testing suite alongside the library.
-  --build-type  CMake build type (Debug, Release, etc., default: $BUILD_TYPE)
-  --num-cores   Number of CPU cores to build the library on.
+  -h|--help       Print this help text.
+  --prefix        Specify the installation prefix (default: /usr/local)
+  --install       Install Lepton after building it.
+  --enable-tests  Build the testing suite for Lepton.
+  --build-type    CMake build type (Debug, Release, etc., default: $BUILD_TYPE)
+  --num-cores     Number of CPU cores to build the library on.
 
 Usage:
   $SCRIPT_NAME [--help] \
@@ -55,8 +58,12 @@ function parse-opts {
                 INSTALL_PREFIX="$2"
                 shift 2
                 ;;
-            --no-tests)
-                BUILD_TESTS=false
+            --install)
+                INSTALL_LEPTON=true
+                shift
+                ;;
+            --enable-tests)
+                BUILD_TESTS=true
                 shift
                 ;;
             --build-type)
@@ -91,7 +98,7 @@ function parse-opts {
     return $RETURN_CODE
 }
 
-function build-and-install-lepton {
+function build-lepton {
     local RETURN_CODE
 
     mkdir -p build
@@ -123,6 +130,16 @@ function build-and-install-lepton {
         return $EXIT_MAKE_FAILED
     fi
 
+    popd
+
+    return $EXIT_SUCCESS
+}
+
+function install-lepton() {
+    local RETURN_CODE
+
+    pushd build
+
     make install
     RETURN_CODE=$?
 
@@ -151,11 +168,20 @@ function main {
         return $RETURN_CODE
     fi
 
-    build-and-install-lepton
+    build-lepton
     RETURN_CODE=$?
 
     if (( RETURN_CODE != EXIT_SUCCESS )); then
         return $RETURN_CODE
+    fi
+
+    if [ -n "$INSTALL_LEPTON" ]; then
+        install-lepton
+        RETURN_CODE=$?
+
+        if (( RETURN_CODE != EXIT_SUCCESS )); then
+            return $RETURN_CODE
+        fi
     fi
 
     return $EXIT_SUCCESS
