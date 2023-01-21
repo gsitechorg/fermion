@@ -5,7 +5,7 @@ pipelines:
         name: Build and Test Lepton
         steps:
           - step:
-              name: Setup Environment
+              name: Setup Conda
               script:
                 - wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
                 - bash Mambaforge-Linux-x86_64.sh -b
@@ -17,8 +17,11 @@ pipelines:
                 - cd ..
                 - mamba env create -f environment.yml
                 - conda activate lepton
-                - pip install git+ssh://git@bitbucket.org:gsitech/belex.git@d59814b0ae33b7e4b160e8aa910f1169ef054a84
-                - pip install git+ssh://git@bitbucket.org:gsitech/belex-libs.git@3facd5241f2e8e12c3aa4afbd8d3e45751ccf63e
+          - step:
+              name: Setup Belex
+              script:
+                - pip install git+ssh://git@bitbucket.org/gsitech/belex.git@d59814b0ae33b7e4b160e8aa910f1169ef054a84#egg=belex
+                - pip install git+ssh://git@bitbucket.org/gsitech/belex-libs.git@3facd5241f2e8e12c3aa4afbd8d3e45751ccf63e#egg=belex-libs
           - step:
               name: Build Lepton
               script:
