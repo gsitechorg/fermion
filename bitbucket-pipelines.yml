@@ -1,7 +1,7 @@
 image: gcc:10.2
 pipelines:
   default:
-    - stage:
+    - step:
         name: Build and Test Lepton
         script:
           - wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
