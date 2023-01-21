@@ -8,12 +8,13 @@ EXIT_MKDIR_FAILED=2
 EXIT_CMAKE_FAILED=3
 EXIT_MAKE_FAILED=4
 EXIT_INSTALL_FAILED=5
+EXIT_TEST_FAILED=6
 
 declare PRINT_HELP
 declare INSTALL_PREFIX
 declare INSTALL_LEPTON
 
-BUILD_TESTS=false
+ENABLE_TESTS=false
 BUILD_TYPE=Debug
 NUM_CORES=1
 
@@ -63,7 +64,7 @@ function parse-opts {
                 shift
                 ;;
             --enable-tests)
-                BUILD_TESTS=true
+                ENABLE_TESTS=true
                 shift
                 ;;
             --build-type)
@@ -113,7 +114,7 @@ function build-lepton {
 
     cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
           -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
-          -DBUILD_TESTS="$BUILD_TESTS" \
+          -DBUILD_TESTS="$ENABLE_TESTS" \
           ..
     RETURN_CODE=$?
 
@@ -139,6 +140,16 @@ function install-lepton() {
     local RETURN_CODE
 
     pushd build
+
+    if [ -n "$ENABLE_TESTS" ]; then
+        ./test/test-lepton
+        RETURN_CODE=$?
+
+        if (( RETURN_CODE != EXIT_SUCCESS )); then
+            echo "test-lepton failed with status $RETURN_CODE" 1>&2
+            return $EXIT_TEST_FAILED
+        fi
+    fi
 
     make install
     RETURN_CODE=$?
