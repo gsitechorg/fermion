@@ -5,9 +5,24 @@ pipelines:
         name: Build and Test Lepton
         steps:
           - step:
+              name: Setup Environment
+              script:
+                - wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
+                - bash Mambaforge-Linux-x86_64.sh -b
+                - ~/mambaforge/bin/conda init
+                - source ~/.bashrc
+                - git clone git@bitbucket.org:gsitech/conda_channel.git
+                - cd conda_channel
+                - conda config --set custom_channels.gsi file://$PWD
+                - cd ..
+                - mamba env create -f environment.yml
+                - conda init lepton
+                - pip install git+ssh://git@bitbucket.org:gsitech/belex.git@d59814b0ae33b7e4b160e8aa910f1169ef054a84
+                - pip install git+ssh://git@bitbucket.org:gsitech/belex-libs.git@3facd5241f2e8e12c3aa4afbd8d3e45751ccf63e
+          - step:
               name: Build Lepton
               script:
-                - ./setup.sh --prefix /usr/local --num-cores $(nproc)
+                - ./setup.sh --prefix ~/local --num-cores $(nproc)
           - step:
               name: Test Lepton
               script:
