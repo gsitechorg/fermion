@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.25.1 FATAL_ERROR)
 project(lepton LANGUAGES C CXX)
 
+option(BUILD_TESTS "Build testing suite" ON)
+
 find_program(BELEX_AOT belex-aot)
 message("belex-aot: ${BELEX_AOT}")
 
@@ -64,4 +66,6 @@ else ()
 endif ()
 message("Installation prefix: ${CMAKE_INSTALL_PREFIX}")
 
-add_subdirectory(test)
+if(BUILD_TESTS)
+    add_subdirectory(test)
+endif()

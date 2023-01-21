@@ -9,7 +9,9 @@ conda activate lepton
 
 ## Building
 
-The following will compile the library and tests, and install the library to `build/lepton-inst` which may be reference from dependent `CMakeList.txt` file by exporting `$CMAKE_PREFIX_PATH`:
+The following will compile the library and tests, and install the library to
+`build/lepton-inst` which may be reference from dependent `CMakeList.txt` file
+by exporting `$CMAKE_PREFIX_PATH`:
 
 ```shell
 mkdir build

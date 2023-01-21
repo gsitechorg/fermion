@@ -1,0 +1,14 @@
+image: gcc:10.2
+pipelines:
+  default:
+    - stage:
+        name: Build and Test Lepton
+        steps:
+          - step:
+              name: Build Lepton
+              script:
+                - ./setup.sh --prefix /usr/local --num-cores $(nproc)
+          - step:
+              name: Test Lepton
+              script:
+                - ./build/test/test-lepton
