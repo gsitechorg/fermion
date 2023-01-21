@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
-set -x
+shopt -s nocasematch
+if [[ "$DEBUG_MODE" =~ ^(true|yes|on|1)$ ]]; then
+    set -x
+fi
+shopt -u nocasematch
 
 EXIT_SUCCESS=0
 EXIT_INVALID_OPTION=1
@@ -160,6 +164,11 @@ function install-lepton() {
     fi
 
     popd
+
+    echo "You may wish to export the following for CMake dependencies:"
+    echo
+    echo "    export CMAKE_PREFIX_PATH=\"${INSTALL_PREFIX}\""
+    echo
 
     return $EXIT_SUCCESS
 }

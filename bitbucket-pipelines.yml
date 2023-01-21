@@ -16,5 +16,5 @@ pipelines:
           - conda activate lepton
           - pip install git+ssh://git@bitbucket.org/gsitech/belex.git@d59814b0ae33b7e4b160e8aa910f1169ef054a84#egg=belex
           - pip install git+ssh://git@bitbucket.org/gsitech/belex-libs.git@3facd5241f2e8e12c3aa4afbd8d3e45751ccf63e#egg=belex-libs
-          - ./setup.sh --prefix ~/local --enable-tests --num-cores $(nproc)
+          - DEBUG_MODE=true ./setup.sh --prefix ~/local --enable-tests --num-cores $(nproc)
           - ./build/test/test-lepton
