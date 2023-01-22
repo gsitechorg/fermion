@@ -38,6 +38,13 @@ extern "C" {
     }                                                       \
   })
 
+#define lepton_foreach_unmasked_section(mask, section, block)                  \
+  lepton_foreach_range(section, LEPTON_NUM_SECTIONS, {                         \
+    if (((1 << section) & (mask)) == 0) {                                      \
+      block;                                                                   \
+    }                                                                          \
+  })
+
 #define lepton_foreach_vr_row(row, block) \
   lepton_foreach_range(row, LEPTON_NUM_SBS, block)
 
@@ -262,6 +269,8 @@ typedef enum {
   LEPTON_L1_SRC_LGL,
 } lepton_l1_patch_src;
 
+const char *lepton_l1_patch_src_name(lepton_l1_patch_src l1_patch_src_type);
+
 typedef struct lepton_l1_patch_t {
   lepton_l1_patch_src src;
   size_t l1_addr;
@@ -319,6 +328,8 @@ typedef enum {
   LEPTON_SRC_INV_GGL,
   LEPTON_SRC_INV_RSP16,
 } lepton_src_t;
+
+const char *lepton_src_name(lepton_src_t src_type);
 
 typedef lepton_wordline_t *(*lepton_unary_op_t)(lepton_wordline_t *nth1);
 typedef lepton_wordline_t *(*lepton_binary_op_t)(lepton_wordline_t *nth1,
@@ -396,6 +407,8 @@ void lepton_free_rsp16_section_patch(lepton_rsp16_section_patch_t *patch);
 void lepton_free_rsp16_section_map(lepton_rsp16_section_map_t *patch);
 void lepton_free_rsp_patches(lepton_rsp_patches_t *patch);
 void lepton_free_rwinh_rst_patch(lepton_rwinh_rst_patch_t *patch);
+
+void lepton_free_src(void *src, lepton_src_t src_type);
 
 lepton_vr_t *lepton_build_vr(void);
 lepton_gl_t *lepton_build_gl(void);
@@ -520,6 +533,8 @@ lepton_ggl_t *lepton_inv_ggl(lepton_apuc_t *apuc);
 
 lepton_rsp16_t *lepton_rsp16(lepton_apuc_t *apuc);
 lepton_rsp16_t *lepton_inv_rsp16(lepton_apuc_t *apuc);
+
+void *lepton_src(lepton_apuc_t *apuc, lepton_src_t src_type);
 
 lepton_gl_t *lepton_ternary_expr(lepton_apuc_t *apuc,
                                  lepton_gl_t *nth1,
@@ -1295,10 +1310,6 @@ size_t lepton_rwinh_set(lepton_apuc_t *apuc, size_t mask);
 void lepton_rwinh_rst_in_place(lepton_apuc_t *apuc, size_t mask, bool has_read);
 lepton_rwinh_rst_patch_t *lepton_rwinh_rst(lepton_apuc_t *apuc, size_t mask,
                                            bool has_read);
-
-#define lepton_rand_bool() (rand() & 1)
-void lepton_randomize_apuc(lepton_apuc_t *apuc, uint32_t seed);
-void lepton_repeatably_randomize_apuc(lepton_apuc_t *apuc);
 
 #ifdef __cplusplus
 }

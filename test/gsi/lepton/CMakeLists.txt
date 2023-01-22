@@ -1,4 +1,7 @@
 target_sources(test-lepton PUBLIC
+  comparators.cpp
+  fixtures.cpp
+  generators.cpp
   test_ggl_from_l1.cpp
   test_ggl_from_rl.cpp
   test_gl_from_rl.cpp

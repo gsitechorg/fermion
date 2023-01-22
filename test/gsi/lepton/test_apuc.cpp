@@ -2,17 +2,9 @@
 
 #include <gtest/gtest.h>
 
-#include "test_apuc.h"
+#include <rapidcheck/gtest.h>
 
-void LeptonAPUCTest::SetUp() {
-  apuc = (lepton_apuc_t *)malloc(sizeof(lepton_apuc_t));
-  lepton_init_apuc(apuc);
-  lepton_repeatably_randomize_apuc(apuc);
-}
-
-void LeptonAPUCTest::TearDown() {
-  lepton_free_apuc(apuc);
-}
+#include "fixtures.h"
 
 TEST_F(LeptonAPUCTest, plats_for_bank) {
   for (size_t bank = 0; bank < 4; bank += 1) {

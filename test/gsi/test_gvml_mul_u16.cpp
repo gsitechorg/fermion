@@ -3,10 +3,11 @@
 
 #include <gtest/gtest.h>
 
+#include "lepton/generators.h"
 #include "test_libgvml.h"
 
 TEST_F(LeptonGVMLTest, gvml_mul_u16) {
-  lepton_repeatably_randomize_apuc(&apuc);
+  lepton_randomize_apuc(&apuc);
   gvml_mul_u16(GVML_VR16_0, GVML_VR16_1, GVML_VR16_2);
   lepton_foreach_vr_plat(plat, {
     uint16_t lhs = 0x0000;

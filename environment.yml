@@ -5,6 +5,9 @@ channels:
 dependencies:
   - belex=2022.09.20
   - belex-libs=2022.05.10
-  - clang=15.0.6
+  - clang=15.0.7
+  - clangxx=15.0.7
+  - libcxx=14.0.6
   - cmake=3.25.1
   - gtest=1.12.1
+  - yaml-cpp=0.7.0

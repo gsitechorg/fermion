@@ -3,10 +3,11 @@
 
 #include <gtest/gtest.h>
 
+#include "lepton/generators.h"
 #include "test_libgvml.h"
 
 TEST_F(LeptonGVMLTest, gvml_store_load_16) {
-  lepton_repeatably_randomize_apuc(&apuc);
+  lepton_randomize_apuc(&apuc);
   gvml_store_16(GVML_VM_0, GVML_VR16_1);
   gvml_load_16(GVML_VR16_0, GVML_VM_0);
   lepton_foreach_vr_section_plat(section, plat, {

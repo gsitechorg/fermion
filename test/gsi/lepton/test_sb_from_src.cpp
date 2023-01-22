@@ -1,143 +1,111 @@
-#include "test_apuc.h"
+#include <gtest/gtest.h>
 
-TEST_F(LeptonAPUCTest, sb_from_src_rl_in_place) {
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = {out};
-  lepton_rl_t *rl = &apuc->rl;
-  lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, rl, LEPTON_SRC_RL);
-  LEPTON_ASSERT_VR_EQ(out, rl);
-}
+#include <rapidcheck/gtest.h>
 
-TEST_F(LeptonAPUCTest, sb_from_src_rl_w_patch) {
+#include "comparators.h"
+#include "fixtures.h"
+#include "generators.h"
+
+RC_GTEST_FIXTURE_PROP(LeptonAPUCTest, sb_from_src, ()) {
+  lepton_sm_t mask = lepton_gen_mask();
+  lepton_src_t src_type = lepton_gen_src_type();
+  std::vector<size_t> row_nums = lepton_gen_writable_row_nums();
+  size_t num_vrs = row_nums.size();
+  lepton_vr_t *vrs[num_vrs];
+
+  for (size_t i = 0; i < num_vrs; i += 1) {
+    size_t row_num = row_nums[i];
+    lepton_vr_t *vr = &apuc->vrs[row_num];
+    vrs[i] = vr;
+  }
+
+  uint32_t vr_seeds[num_vrs];
+  uint32_t src_seed = lepton_gen_seed();
+
+  for (size_t i = 0; i < num_vrs; i += 1) {
+    lepton_vr_t *vr = vrs[i];
+    uint32_t vr_seed = lepton_gen_seed();
+    lepton_randomize_vr(vr, vr_seed);
+    vr_seeds[i] = vr_seed;
+  }
+  lepton_randomize_src(apuc, src_type, src_seed);
+
+  // NOTE: Load src only after randomizing it
+  void *src = lepton_src(apuc, src_type);
+
+  lepton_vr_t *expected[num_vrs];
+  for (size_t i = 0; i < num_vrs; i += 1) {
+    expected[i] = (lepton_vr_t *)malloc(sizeof(lepton_vr_t));
+  }
+
+  lepton_foreach_masked_section(mask, section, {
+    for (size_t i = 0; i < num_vrs; i += 1) {
+      lepton_foreach_rl_plat(plat, {
+        switch (src_type) {
+        case LEPTON_SRC_RL:      // fallthrough
+        case LEPTON_SRC_NRL:     // fallthrough
+        case LEPTON_SRC_ERL:     // fallthrough
+        case LEPTON_SRC_WRL:     // fallthrough
+        case LEPTON_SRC_SRL:     // fallthrough
+        case LEPTON_SRC_INV_RL:  // fallthrough
+        case LEPTON_SRC_INV_NRL: // fallthrough
+        case LEPTON_SRC_INV_ERL: // fallthrough
+        case LEPTON_SRC_INV_WRL: // fallthrough
+        case LEPTON_SRC_INV_SRL: // fallthrough
+          (*expected[i])[section][plat] = (*(lepton_rl_t *)src)[section][plat];
+          break;
+        case LEPTON_SRC_GGL: // fallthrough
+        case LEPTON_SRC_INV_GGL:
+          (*expected[i])[section][plat] =
+            (*(lepton_ggl_t *)src)[section / LEPTON_NUM_GROUPS][plat];
+          break;
+        case LEPTON_SRC_GL: // fallthrough
+        case LEPTON_SRC_INV_GL:
+          (*expected[i])[section][plat] = (*(lepton_gl_t *)src)[plat];
+          break;
+        case LEPTON_SRC_RSP16: // fallthrough
+        case LEPTON_SRC_INV_RSP16:
+          (*expected[i])[section][plat] = (*(lepton_rsp16_t *)src)[section][plat / 16];
+          break;
+        }
+      });
+    }
+  });
+
+  lepton_foreach_unmasked_section(mask, section, {
+    for (size_t i = 0; i < num_vrs; i += 1) {
+      memcpy(&(*expected[i])[section], &(*vrs[i])[section], LEPTON_WORDLINE_SIZE);
+    }
+  });
+
+  lepton_sb_from_src(apuc, mask, vrs, num_vrs, src, src_type);
+  for (size_t i = 0; i < num_vrs; i += 1) {
+    RC_ASSERT(lepton_rl_eq(vrs[i], expected[i]));
+  }
+
+  for (size_t i = 0; i < num_vrs; i += 1) {
+    lepton_vr_t *vr = vrs[i];
+    uint32_t vr_seed = vr_seeds[i];
+    lepton_randomize_vr(vr, vr_seed);
+  }
+  lepton_randomize_src(apuc, src_type, src_seed);
+
+  // Refresh src
+  lepton_free_src(src, src_type);
+  src = lepton_src(apuc, src_type);
+
   apuc->in_place = false;
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = { out };
-  lepton_rl_t *rl = &apuc->rl;
   lepton_wordline_map_t *patch =
-    lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, rl, LEPTON_SRC_RL);
+    lepton_sb_from_src(apuc, mask, vrs, num_vrs, src, src_type);
   lepton_patch_sb(apuc, patch);
   lepton_free_wordline_map(patch);
-  LEPTON_ASSERT_VR_EQ(out, rl);
+  for (size_t i = 0; i < num_vrs; i += 1) {
+    RC_ASSERT(lepton_rl_eq(vrs[i], expected[i]));
+  }
   apuc->in_place = true;
-}
 
-TEST_F(LeptonAPUCTest, sb_from_src_nrl_in_place) {
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = {out};
-  lepton_rl_t *nrl = lepton_nrl(apuc);
-  lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, nrl, LEPTON_SRC_NRL);
-  LEPTON_ASSERT_VR_EQ(out, nrl);
-  lepton_free_rl(nrl);
-}
-
-TEST_F(LeptonAPUCTest, sb_from_src_nrl_w_patch) {
-  apuc->in_place = false;
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = {out};
-  lepton_rl_t *nrl = lepton_nrl(apuc);
-  lepton_wordline_map_t *patch =
-      lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, nrl, LEPTON_SRC_NRL);
-  lepton_patch_sb(apuc, patch);
-  lepton_free_wordline_map(patch);
-  LEPTON_ASSERT_VR_EQ(out, nrl);
-  lepton_free_rl(nrl);
-  apuc->in_place = true;
-}
-
-TEST_F(LeptonAPUCTest, sb_from_src_srl_in_place) {
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = {out};
-  lepton_rl_t *srl = lepton_srl(apuc);
-  lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, srl, LEPTON_SRC_SRL);
-  LEPTON_ASSERT_VR_EQ(out, srl);
-  lepton_free_rl(srl);
-}
-
-TEST_F(LeptonAPUCTest, sb_from_src_srl_w_patch) {
-  apuc->in_place = false;
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = {out};
-  lepton_rl_t *srl = lepton_srl(apuc);
-  lepton_wordline_map_t *patch =
-      lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, srl, LEPTON_SRC_SRL);
-  lepton_patch_sb(apuc, patch);
-  lepton_free_wordline_map(patch);
-  LEPTON_ASSERT_VR_EQ(out, srl);
-  lepton_free_rl(srl);
-  apuc->in_place = true;
-}
-
-TEST_F(LeptonAPUCTest, sb_from_src_gl_in_place) {
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = { out };
-  lepton_gl_t *gl = &apuc->gl;
-  lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, gl, LEPTON_SRC_GL);
-  LEPTON_ASSERT_VR_EQ_GL(out, gl);
-}
-
-TEST_F(LeptonAPUCTest, sb_from_src_gl_w_patch) {
-  apuc->in_place = false;
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = { out };
-  lepton_gl_t *gl = &apuc->gl;
-  lepton_wordline_map_t *patch =
-      lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, gl, LEPTON_SRC_GL);
-  lepton_patch_sb(apuc, patch);
-  lepton_free_wordline_map(patch);
-  LEPTON_ASSERT_VR_EQ_GL(out, gl);
-  apuc->in_place = true;
-}
-
-TEST_F(LeptonAPUCTest, sb_from_src_ggl_in_place) {
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = {out};
-  lepton_ggl_t *ggl = &apuc->ggl;
-  lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, ggl, LEPTON_SRC_GGL);
-  LEPTON_ASSERT_VR_EQ_GGL(out, ggl);
-}
-
-TEST_F(LeptonAPUCTest, sb_from_src_ggl_w_patch) {
-  apuc->in_place = false;
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = {out};
-  lepton_ggl_t *ggl = &apuc->ggl;
-  lepton_wordline_map_t *patch =
-      lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, ggl, LEPTON_SRC_GGL);
-  lepton_patch_sb(apuc, patch);
-  lepton_free_wordline_map(patch);
-  LEPTON_ASSERT_VR_EQ_GGL(out, ggl);
-  apuc->in_place = true;
-}
-
-TEST_F(LeptonAPUCTest, sb_from_src_rsp16_in_place) {
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = {out};
-  lepton_rsp16_t *rsp16 = &apuc->rsp16;
-  lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, rsp16, LEPTON_SRC_RSP16);
-  LEPTON_ASSERT_VR_EQ_RSP16(out, rsp16);
-}
-
-TEST_F(LeptonAPUCTest, sb_from_src_rsp16_w_patch) {
-  apuc->in_place = false;
-  lepton_vr_t *out = &apuc->vrs[0];
-  size_t num_vrs = 1;
-  lepton_vr_t *vrs[] = {out};
-  lepton_rsp16_t *rsp16 = &apuc->rsp16;
-  lepton_wordline_map_t *patch =
-      lepton_sb_from_src(apuc, 0xFFFF, vrs, num_vrs, rsp16, LEPTON_SRC_RSP16);
-  lepton_patch_sb(apuc, patch);
-  lepton_free_wordline_map(patch);
-  LEPTON_ASSERT_VR_EQ_RSP16(out, rsp16);
-  apuc->in_place = true;
+  for (size_t i = 0; i < num_vrs; i += 1) {
+    lepton_free_vr(expected[i]);
+  }
+  lepton_free_src(src, src_type);
 }

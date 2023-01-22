@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include "lepton/generators.h"
 #include "test_libgvml.h"
 
 static inline void dma_l2_to_l1(enum gvml_vm_reg vmr) {
@@ -26,7 +27,7 @@ static inline void dma_l1_to_l2(enum gvml_vm_reg vmr) {
 }
 
 TEST_F(LeptonGVMLTest, gvml_store_load_vmr_16) {
-  lepton_repeatably_randomize_apuc(&apuc);
+  lepton_randomize_apuc(&apuc);
   gvml_store_16(GVML_VM_0, GVML_VR16_1);
   dma_l1_to_l2(GVML_VM_0);
   dma_l2_to_l1(GVML_VM_1);
