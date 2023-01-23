@@ -3,7 +3,7 @@ target_sources(test-lepton PUBLIC
   fixtures.cpp
   generators.cpp
   utils.cpp
-  test_operations.cpp
+  test_apuc.cpp
   test_ggl_from_l1.cpp
   test_ggl_from_rl.cpp
   test_gl_from_rl.cpp
@@ -12,14 +12,21 @@ target_sources(test-lepton PUBLIC
   test_l2_from_lgl.cpp
   test_lgl_from_l1.cpp
   test_lgl_from_l2.cpp
+  test_operations.cpp
   test_rl_from_sb.cpp
   test_rl_from_sb_or_src.cpp
   test_rl_from_src.cpp
   test_rl_or_eq_sb.cpp
   test_rl_xor_eq_sb.cpp
   test_rl_xor_eq_src.cpp
+  test_rsp16_from_rsp256.cpp
+  test_rsp256_from_rsp16.cpp
+  test_rsp256_from_rsp2k.cpp
+  test_rsp2k_from_rsp256.cpp
+  test_rsp2k_from_rsp32k.cpp
+  test_rsp32k_from_rsp2k.cpp
+  test_rsp_end.cpp
   test_sb_from_src.cpp
-  test_src.cpp
-  test_apuc.cpp
   test_seu_layer.cpp
+  test_src.cpp
 )

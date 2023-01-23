@@ -465,66 +465,6 @@ void lepton_free_rwinh_rst_patch(lepton_rwinh_rst_patch_t *patch) {
   }
 }
 
-lepton_vr_t *lepton_build_vr() {
-  lepton_vr_t *vr = malloc(sizeof(lepton_vr_t));
-  lepton_init_vr(vr, false);
-  return vr;
-}
-
-lepton_gl_t *lepton_build_gl() {
-  lepton_gl_t *gl = malloc(sizeof(lepton_gl_t));
-  lepton_init_gl(gl, false);
-  return gl;
-}
-
-lepton_ggl_t *lepton_build_ggl() {
-  lepton_ggl_t *ggl = malloc(sizeof(lepton_ggl_t));
-  lepton_init_ggl(ggl, false);
-  return ggl;
-}
-
-lepton_rsp16_t *lepton_build_rsp16() {
-  lepton_rsp16_t *rsp16 = malloc(sizeof(lepton_rsp16_t));
-  lepton_init_rsp16(rsp16, false);
-  return rsp16;
-}
-
-lepton_rsp256_t *lepton_build_rsp256() {
-  lepton_rsp256_t *rsp256 = malloc(sizeof(lepton_rsp256_t));
-  lepton_init_rsp256(rsp256, false);
-  return rsp256;
-}
-
-lepton_rsp2k_t *lepton_build_rsp2k() {
-  lepton_rsp2k_t *rsp2k = malloc(sizeof(lepton_rsp2k_t));
-  lepton_init_rsp2k(rsp2k, false);
-  return rsp2k;
-}
-
-lepton_rsp32k_t *lepton_build_rsp32k() {
-  lepton_rsp32k_t *rsp32k = malloc(sizeof(lepton_rsp32k_t));
-  lepton_init_rsp32k(rsp32k, false);
-  return rsp32k;
-}
-
-lepton_l1_t *lepton_build_l1() {
-  lepton_l1_t *l1 = malloc(sizeof(lepton_l1_t));
-  lepton_init_l1(l1, false);
-  return l1;
-}
-
-lepton_l2_t *lepton_build_l2() {
-  lepton_l2_t *l2 = malloc(sizeof(lepton_l2_t));
-  lepton_init_l2(l2, false);
-  return l2;
-}
-
-lepton_lgl_t *lepton_build_lgl() {
-  lepton_lgl_t *lgl = malloc(sizeof(lepton_lgl_t));
-  lepton_init_lgl(lgl, false);
-  return lgl;
-}
-
 void lepton_reset_rl_in_place(lepton_apuc_t *apuc) {
   lepton_init_vr(&apuc->rl, false);
 }
@@ -651,75 +591,10 @@ void lepton_bank_group_row(size_t l1_addr, size_t *bank, size_t *group,
   *row = l1_addr & 0x1FF;
 }
 
-bool lepton_any_section_plat(bool ***data, size_t section, size_t lower,
-                             size_t upper) {
-  lepton_foreach_range(plat, lower, upper, {
-    if ((*data)[section][plat]) {
-      return true;
-    }
-  });
-  return false;
-}
-
-void lepton_rsp_from_rsp(bool ***rsp_left,
-                         bool ***rsp_right,
-                         size_t left_width,
-                         size_t right_width)
-{
-  if (left_width < right_width) {
-    lepton_rsp_from_contraction(rsp_left,
-                                rsp_right,
-                                left_width,
-                                right_width);
-  }
-  else {
-    lepton_rsp_from_expansion(rsp_left,
-                              rsp_right,
-                              left_width,
-                              right_width);
-  }
-}
-
-void lepton_rsp_from_contraction(bool ***rsp_left,
-                                 bool ***rsp_right,
-                                 size_t left_width,
-                                 size_t right_width)
-{
-  size_t step_size = right_width / left_width;
-  size_t num_steps = left_width;
-  lepton_foreach_range(step, num_steps, {
-    size_t lower = step * step_size;
-    size_t upper = lower + step_size;
-    lepton_foreach_rsp16_section(section, {
-      (*rsp_left)[section][step] =
-        lepton_any_section_plat(rsp_right, section, lower, upper);
-    });
-  });
-}
-
-void lepton_rsp_from_expansion(bool ***rsp_left,
-                               bool ***rsp_right,
-                               size_t left_width,
-                               size_t right_width) {
-  size_t step_size = left_width / right_width;
-  size_t num_steps = right_width;
-  lepton_foreach_range(step, num_steps, {
-    size_t lower = step * step_size;
-    size_t upper = lower + step_size;
-    lepton_foreach_range(section, LEPTON_NUM_SECTIONS, {
-      lepton_foreach_range(plat, lower, upper, {
-        (*rsp_left)[plat][section] = (*rsp_right)[step][section];
-      });
-    });
-  });
-}
-
 void lepton_rsp16_from_rsp256_in_place(lepton_apuc_t *apuc) {
   lepton_rsp16_t *rsp_left = &apuc->rsp16;
   lepton_rsp256_t *rsp_right = &apuc->rsp256;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP16_PLATS,
                       LEPTON_NUM_RSP256_PLATS);
 }
@@ -730,11 +605,9 @@ lepton_rsp16_t *lepton_rsp16_from_rsp256(lepton_apuc_t *apuc) {
     return NULL;
   }
 
-  lepton_rsp16_t *rsp_left = lepton_build_rsp16();
+  lepton_rsp16_t *rsp_left = malloc(sizeof(lepton_rsp16_t));
   lepton_rsp256_t *rsp_right = &apuc->rsp256;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP16_PLATS,
                       LEPTON_NUM_RSP256_PLATS);
 
@@ -744,9 +617,7 @@ lepton_rsp16_t *lepton_rsp16_from_rsp256(lepton_apuc_t *apuc) {
 void lepton_rsp256_from_rsp16_in_place(lepton_apuc_t *apuc) {
   lepton_rsp256_t *rsp_left = &apuc->rsp256;
   lepton_rsp16_t *rsp_right = &apuc->rsp16;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP256_PLATS,
                       LEPTON_NUM_RSP16_PLATS);
 }
@@ -757,11 +628,9 @@ lepton_rsp256_t *lepton_rsp256_from_rsp16(lepton_apuc_t *apuc) {
     return NULL;
   }
 
-  lepton_rsp256_t *rsp_left = lepton_build_rsp256();
+  lepton_rsp256_t *rsp_left = malloc(sizeof(lepton_rsp256_t));
   lepton_rsp16_t *rsp_right = &apuc->rsp16;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP256_PLATS,
                       LEPTON_NUM_RSP16_PLATS);
 
@@ -771,9 +640,7 @@ lepton_rsp256_t *lepton_rsp256_from_rsp16(lepton_apuc_t *apuc) {
 void lepton_rsp256_from_rsp2k_in_place(lepton_apuc_t *apuc) {
   lepton_rsp256_t *rsp_left = &apuc->rsp256;
   lepton_rsp2k_t *rsp_right = &apuc->rsp2k;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP256_PLATS,
                       LEPTON_NUM_RSP2K_PLATS);
 }
@@ -784,11 +651,9 @@ lepton_rsp256_t *lepton_rsp256_from_rsp2k(lepton_apuc_t *apuc) {
     return NULL;
   }
 
-  lepton_rsp256_t *rsp_left = lepton_build_rsp256();
+  lepton_rsp256_t *rsp_left = malloc(sizeof(lepton_rsp256_t));
   lepton_rsp2k_t *rsp_right = &apuc->rsp2k;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP256_PLATS,
                       LEPTON_NUM_RSP2K_PLATS);
 
@@ -798,9 +663,7 @@ lepton_rsp256_t *lepton_rsp256_from_rsp2k(lepton_apuc_t *apuc) {
 void lepton_rsp2k_from_rsp256_in_place(lepton_apuc_t *apuc) {
   lepton_rsp2k_t *rsp_left = &apuc->rsp2k;
   lepton_rsp256_t *rsp_right = &apuc->rsp256;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP2K_PLATS,
                       LEPTON_NUM_RSP256_PLATS);
 }
@@ -811,11 +674,9 @@ lepton_rsp2k_t *lepton_rsp2k_from_rsp256(lepton_apuc_t *apuc) {
     return NULL;
   }
 
-  lepton_rsp2k_t *rsp_left = lepton_build_rsp2k();
+  lepton_rsp2k_t *rsp_left = malloc(sizeof(lepton_rsp2k_t));
   lepton_rsp256_t *rsp_right = &apuc->rsp256;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP2K_PLATS,
                       LEPTON_NUM_RSP256_PLATS);
 
@@ -825,9 +686,7 @@ lepton_rsp2k_t *lepton_rsp2k_from_rsp256(lepton_apuc_t *apuc) {
 void lepton_rsp2k_from_rsp32k_in_place(lepton_apuc_t *apuc) {
   lepton_rsp2k_t *rsp_left = &apuc->rsp2k;
   lepton_rsp32k_t *rsp_right = &apuc->rsp32k;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP2K_PLATS,
                       LEPTON_NUM_RSP32K_PLATS);
 }
@@ -838,11 +697,9 @@ lepton_rsp2k_t *lepton_rsp2k_from_rsp32k(lepton_apuc_t *apuc) {
     return NULL;
   }
 
-  lepton_rsp2k_t *rsp_left = lepton_build_rsp2k();
+  lepton_rsp2k_t *rsp_left = malloc(sizeof(lepton_rsp2k_t));
   lepton_rsp32k_t *rsp_right = &apuc->rsp32k;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP2K_PLATS,
                       LEPTON_NUM_RSP32K_PLATS);
 
@@ -852,9 +709,7 @@ lepton_rsp2k_t *lepton_rsp2k_from_rsp32k(lepton_apuc_t *apuc) {
 void lepton_rsp32k_from_rsp2k_in_place(lepton_apuc_t *apuc) {
   lepton_rsp32k_t *rsp_left = &apuc->rsp32k;
   lepton_rsp2k_t *rsp_right = &apuc->rsp2k;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP32K_PLATS,
                       LEPTON_NUM_RSP2K_PLATS);
 }
@@ -865,11 +720,9 @@ lepton_rsp32k_t *lepton_rsp32k_from_rsp2k(lepton_apuc_t *apuc) {
     return NULL;
   }
 
-  lepton_rsp32k_t *rsp_left = lepton_build_rsp32k();
+  lepton_rsp32k_t *rsp_left = malloc(sizeof(lepton_rsp32k_t));
   lepton_rsp2k_t *rsp_right = &apuc->rsp2k;
-
-  lepton_rsp_from_rsp((bool ***) rsp_left,
-                      (bool ***) rsp_right,
+  lepton_rsp_from_rsp(rsp_left, rsp_right,
                       LEPTON_NUM_RSP32K_PLATS,
                       LEPTON_NUM_RSP2K_PLATS);
 
@@ -2691,8 +2544,8 @@ void lepton_rsp16_from_rl_in_place(lepton_apuc_t *apuc, lepton_sm_t mask) {
     size_t lower = step * step_size;
     size_t upper = lower + step_size;
     lepton_foreach_masked_section(mask, section, {
-      apuc->rsp16[section][step] =
-        lepton_any_section_plat((bool ***) &apuc->rl, section, lower, upper);
+      lepton_any_plat_in_place(&apuc->rsp16, &apuc->rl,
+                               section, step, lower, upper);
     });
   });
 }
@@ -2728,8 +2581,9 @@ lepton_rsp16_section_map_t *lepton_rsp16_from_rl(lepton_apuc_t *apuc,
     size_t upper = lower + step_size;
     size_t nth_update = 0;
     lepton_foreach_masked_section(mask, section, {
-      patch->updates[nth_update]->update[section][step] =
-        lepton_any_section_plat((bool ***) &apuc->rl, section, lower, upper);
+      lepton_any_plat_in_place(
+          &patch->updates[nth_update]->update,
+          &apuc->rl, section, step, lower, upper);
       nth_update += 1;
     });
   });

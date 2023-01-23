@@ -188,6 +188,52 @@ void lepton_bank_group_row(size_t l1_addr, size_t *bank, size_t *group,
     });                                                                     \
   }
 
+#define lepton_any_plat_in_place(lhs, rhs, section, step, lower, upper)        \
+  {                                                                            \
+    (*lhs)[section][step] = false;                                             \
+    lepton_foreach_range(plat, lower, upper, {                                 \
+      if ((*rhs)[section][plat]) {                                             \
+        (*lhs)[section][step] = true;                                          \
+        break;                                                                 \
+      }                                                                        \
+    })                                                                         \
+  }
+
+#define lepton_rsp_from_contraction(lhs, rhs, left_width, right_width)         \
+  {                                                                            \
+    size_t step_size = (right_width) / (left_width);                           \
+    size_t num_steps = left_width;                                             \
+    lepton_foreach_range(step, num_steps, {                                    \
+      size_t lower = step * step_size;                                         \
+      size_t upper = lower + step_size;                                        \
+      lepton_foreach_rsp16_section(section, {                                  \
+        lepton_any_plat_in_place(lhs, rhs, section, step, lower, upper);       \
+      });                                                                      \
+    });                                                                        \
+  }
+
+#define lepton_rsp_from_expansion(lhs, rhs, left_width, right_width)           \
+  {                                                                            \
+    size_t step_size = (left_width) / (right_width);                           \
+    size_t num_steps = right_width;                                            \
+    lepton_foreach_range(step, num_steps, {                                    \
+      size_t lower = step * step_size;                                         \
+      size_t upper = lower + step_size;                                        \
+      lepton_foreach_range(section, LEPTON_NUM_SECTIONS, {                     \
+        lepton_foreach_range(plat, lower, upper, {                             \
+          (*lhs)[section][plat] = (*rhs)[section][step];                       \
+        });                                                                    \
+      });                                                                      \
+    });                                                                        \
+  }
+
+#define lepton_rsp_from_rsp(lhs, rhs, left_width, right_width)                 \
+  if (left_width < right_width) {                                              \
+    lepton_rsp_from_contraction(lhs, rhs, left_width, right_width);            \
+  } else {                                                                     \
+    lepton_rsp_from_expansion(lhs, rhs, left_width, right_width);              \
+  }
+
 typedef bool lepton_vr_t[LEPTON_NUM_SECTIONS][LEPTON_NUM_PLATS_PER_APUC];
 typedef lepton_vr_t lepton_rl_t;
 typedef uint16_t lepton_sm_t;
@@ -271,8 +317,6 @@ typedef enum {
   LEPTON_L1_SRC_LGL,
 } lepton_l1_patch_src;
 
-const char *lepton_l1_patch_src_name(lepton_l1_patch_src l1_patch_src_type);
-
 typedef struct lepton_l1_patch_t {
   lepton_l1_patch_src src;
   size_t l1_addr;
@@ -331,14 +375,16 @@ typedef enum {
   LEPTON_SRC_INV_RSP16,
 } lepton_src_t;
 
-const char *lepton_src_name(lepton_src_t src_type);
-
 typedef lepton_wordline_t *(*lepton_unary_op_t)(lepton_wordline_t *nth1);
 typedef lepton_wordline_t *(*lepton_binary_op_t)(lepton_wordline_t *nth1,
                                                  lepton_wordline_t *nth2);
 typedef lepton_wordline_t *(*lepton_ternary_op_t)(lepton_wordline_t *nth1,
                                                   lepton_wordline_t *nth2,
                                                   lepton_wordline_t *nth3);
+
+const char *lepton_l1_patch_src_name(lepton_l1_patch_src l1_patch_src_type);
+
+const char *lepton_src_name(lepton_src_t src_type);
 
 void lepton_plats_for_bank(size_t bank,
                            size_t *lower_plat_apc_0,
@@ -412,17 +458,6 @@ void lepton_free_rwinh_rst_patch(lepton_rwinh_rst_patch_t *patch);
 
 void lepton_free_src(void *src, lepton_src_t src_type);
 
-lepton_vr_t *lepton_build_vr(void);
-lepton_gl_t *lepton_build_gl(void);
-lepton_ggl_t *lepton_build_ggl(void);
-lepton_rsp16_t *lepton_build_rsp16(void);
-lepton_rsp256_t *lepton_build_rsp256(void);
-lepton_rsp2k_t *lepton_build_rsp2k(void);
-lepton_rsp32k_t *lepton_build_rsp32k(void);
-lepton_l1_t *lepton_build_l1(void);
-lepton_l2_t *lepton_build_l2(void);
-lepton_lgl_t *lepton_build_lgl(void);
-
 void lepton_reset_rl_in_place(lepton_apuc_t *apuc);
 lepton_vr_patch_t *lepton_reset_rl(lepton_apuc_t *apuc);
 
@@ -452,24 +487,6 @@ lepton_l2_t (*lepton_reset_l2(lepton_apuc_t *apuc))[LEPTON_NUM_L2_ROWS];
 
 void lepton_reset_lgl_in_place(lepton_apuc_t *apuc);
 lepton_lgl_t *lepton_reset_lgl(lepton_apuc_t *apuc);
-
-bool lepton_any_section_plat(bool ***data, size_t section, size_t lower,
-                             size_t upper);
-
-void lepton_rsp_from_rsp(bool ***rsp_left,
-                         bool ***rsp_right,
-                         size_t left_width,
-                         size_t right_width);
-
-void lepton_rsp_from_contraction(bool ***rsp_left,
-                                 bool ***rsp_right,
-                                 size_t left_width,
-                                 size_t right_width);
-
-void lepton_rsp_from_expansion(bool ***rsp_left,
-                               bool ***rsp_right,
-                               size_t left_width,
-                               size_t right_width);
 
 /** [APL] RSP16 = RSP256; */
 void lepton_rsp16_from_rsp256_in_place(lepton_apuc_t *apuc);
