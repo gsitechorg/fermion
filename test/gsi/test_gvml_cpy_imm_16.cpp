@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "test_libgvml.h"
+#include "fixtures.h"
 
 TEST_F(LeptonGVMLTest, gvml_cpy_imm_16) {
   gvml_cpy_imm_16(GVML_VR16_0, 0xBEEF);

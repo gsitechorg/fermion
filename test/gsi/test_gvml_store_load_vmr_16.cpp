@@ -5,8 +5,10 @@
 
 #include <gtest/gtest.h>
 
+#include <rapidcheck/gtest.h>
+
 #include "lepton/generators.h"
-#include "test_libgvml.h"
+#include "fixtures.h"
 
 static inline void dma_l2_to_l1(enum gvml_vm_reg vmr) {
   uint8_t bank;
@@ -26,8 +28,16 @@ static inline void dma_l1_to_l2(enum gvml_vm_reg vmr) {
   }
 }
 
-TEST_F(LeptonGVMLTest, gvml_store_load_vmr_16) {
-  lepton_randomize_apuc(&apuc);
+RC_GTEST_FIXTURE_PROP(LeptonGVMLTest, gvml_store_load_vmr_16, ()) {
+  srand(lepton_gen_seed());
+  lepton_randomize_vr(&apuc.vrs[0], rand());
+  lepton_randomize_vr(&apuc.vrs[1], rand());
+  for (size_t i = 0; i < 9; i += 1) {
+    lepton_randomize_l1(&apuc.l1[i], rand());
+  }
+  lepton_foreach_l2_row(row, {
+      lepton_randomize_l2(&apuc.l2[row], rand());
+  });
   gvml_store_16(GVML_VM_0, GVML_VR16_1);
   dma_l1_to_l2(GVML_VM_0);
   dma_l2_to_l1(GVML_VM_1);
@@ -35,8 +45,6 @@ TEST_F(LeptonGVMLTest, gvml_store_load_vmr_16) {
   lepton_foreach_vr_section_plat(section, plat, {
     bool actual_value = apuc.vrs[GVML_VR16_0][section][plat];
     bool expected_value = apuc.vrs[GVML_VR16_1][section][plat];
-    ASSERT_EQ(actual_value, expected_value)
-        << "Expected apuc.vrs[0][" << section << "][" << plat << "] to be "
-        << expected_value << " but was " << actual_value;
+    RC_ASSERT(actual_value == expected_value);
   });
 }

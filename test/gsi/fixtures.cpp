@@ -1,6 +1,6 @@
 #include <gsi/libgvml.h>
 
-#include "test_libgvml.h"
+#include "fixtures.h"
 
 void LeptonGVMLTest::SetUp() {
   gvml_init();

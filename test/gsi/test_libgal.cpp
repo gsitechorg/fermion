@@ -6,7 +6,7 @@
 
 #include <gtest/gtest.h>
 
-#include "test_libgvml.h"
+#include "fixtures.h"
 
 static inline __attribute__((always_inline))
 void my_dma_l2_to_l1_32k(enum gvml_vm_reg vmr)

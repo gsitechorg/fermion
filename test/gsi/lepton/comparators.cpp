@@ -51,3 +51,7 @@ bool lepton_gl_eq(lepton_gl_t *actual, lepton_gl_t *expected) {
 bool lepton_l2_eq(lepton_l2_t *actual, lepton_l2_t *expected) {
   return memcmp(actual, expected, LEPTON_L2_SIZE) == 0;
 }
+
+bool lepton_rsp16_eq(lepton_rsp16_t *actual, lepton_rsp16_t *expected) {
+  return memcmp(actual, expected, LEPTON_RSP16_SIZE) == 0;
+}

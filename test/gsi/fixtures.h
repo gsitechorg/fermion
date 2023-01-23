@@ -1,5 +1,5 @@
-#ifndef __LEPTON_TEST_LIBGVML_H__
-#define __LEPTON_TEST_LIBGVML_H__
+#ifndef __GSI__GVML__FIXTURES_H__
+#define __GSI__GVML__FIXTURES_H__
 
 #include <gtest/gtest.h>
 
@@ -9,4 +9,4 @@ protected:
   void TearDown() override;
 };
 
-#endif // __LEPTON_TEST_LIBGVML_H__
+#endif // __GSI__GVML__FIXTURES_H__

@@ -3,11 +3,16 @@
 
 #include <gtest/gtest.h>
 
-#include "lepton/generators.h"
-#include "test_libgvml.h"
+#include <rapidcheck/gtest.h>
 
-TEST_F(LeptonGVMLTest, gvml_mul_u16) {
-  lepton_randomize_apuc(&apuc);
+#include "lepton/generators.h"
+#include "fixtures.h"
+
+RC_GTEST_FIXTURE_PROP(LeptonGVMLTest, gvml_mul_u16, ()) {
+  srand(lepton_gen_seed());
+  lepton_randomize_vr(&apuc.vrs[0], rand());
+  lepton_randomize_vr(&apuc.vrs[1], rand());
+  lepton_randomize_vr(&apuc.vrs[2], rand());
   gvml_mul_u16(GVML_VR16_0, GVML_VR16_1, GVML_VR16_2);
   lepton_foreach_vr_plat(plat, {
     uint16_t lhs = 0x0000;
@@ -20,8 +25,6 @@ TEST_F(LeptonGVMLTest, gvml_mul_u16) {
       actual |= (apuc.vrs[GVML_VR16_0][section][plat] << section);
     });
     expected = (uint16_t)(((uint32_t)lhs * (uint32_t)rhs) & 0xFFFF);
-    ASSERT_EQ(actual, expected)
-        << "Expected apuc.vrs[0][:][" << plat << "] = (" << lhs << " * " << rhs
-        << ") to be " << expected << " but was " << actual;
+    RC_ASSERT(actual == expected);
   });
 }

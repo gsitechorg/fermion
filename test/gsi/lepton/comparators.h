@@ -31,4 +31,6 @@ bool lepton_l2_eq(lepton_l2_t *actual, lepton_l2_t *expected);
 
 #define lepton_lgl_eq lepton_l2_eq
 
+bool lepton_rsp16_eq(lepton_rsp16_t *actual, lepton_rsp16_t *expected);
+
 #endif // __GSI__LEPTON__TEST__COMPARATORS_H__
