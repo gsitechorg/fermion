@@ -5,6 +5,8 @@
 
 #include <gsi/lepton/apuc.h>
 
+bool lepton_wordline_eq(lepton_wordline_t *actual, lepton_wordline_t *expected);
+
 bool lepton_vr_eq(lepton_vr_t *actual, lepton_vr_t *expected);
 
 #define lepton_rl_eq lepton_vr_eq

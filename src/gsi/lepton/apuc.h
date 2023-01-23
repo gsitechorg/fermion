@@ -54,6 +54,8 @@ extern "C" {
 #define lepton_foreach_vr_plat(plat, block) \
   lepton_foreach_range(plat, LEPTON_NUM_PLATS_PER_APUC, block)
 
+#define lepton_foreach_wordline_plat lepton_foreach_vr_plat
+
 #define lepton_foreach_vr_section_plat(section, plat, block) \
   lepton_foreach_vr_section(section, {                       \
     lepton_foreach_vr_plat(plat, block);                     \

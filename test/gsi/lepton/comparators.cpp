@@ -4,6 +4,10 @@
 
 #include "comparators.h"
 
+bool lepton_wordline_eq(lepton_wordline_t *actual, lepton_wordline_t *expected) {
+  return memcmp(actual, expected, LEPTON_WORDLINE_SIZE) == 0;
+}
+
 bool lepton_vr_eq(lepton_vr_t *actual, lepton_vr_t *expected) {
   return memcmp(actual, expected, LEPTON_VR_SIZE) == 0;
 }

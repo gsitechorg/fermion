@@ -29,6 +29,8 @@ std::vector<size_t> lepton_gen_writable_row_nums();
 
 void lepton_randomize_apuc(lepton_apuc_t *apuc, uint32_t seed);
 
+void lepton_randomize_wordline(lepton_wordline_t *wordline, uint32_t seed);
+
 void lepton_randomize_vr(lepton_vr_t *vr, uint32_t seed);
 
 #define lepton_randomize_rl lepton_randomize_vr

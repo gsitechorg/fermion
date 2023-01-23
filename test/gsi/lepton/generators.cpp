@@ -101,6 +101,13 @@ void lepton_randomize_apuc(lepton_apuc_t *apuc, uint32_t seed) {
   lepton_randomize_lgl(&apuc->lgl, rand());
 }
 
+void lepton_randomize_wordline(lepton_wordline_t *wordline, uint32_t seed) {
+  srand(seed);
+  lepton_foreach_vr_plat(plat, {
+    (*wordline)[plat] = lepton_gen_bool();
+  });
+}
+
 void lepton_randomize_vr(lepton_vr_t *vr, uint32_t seed) {
   srand(seed);
   lepton_foreach_vr_section_plat(section, plat, {
