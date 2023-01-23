@@ -334,12 +334,12 @@ typedef struct lepton_l2_patch_t {
 
 typedef struct lepton_rsp16_section_patch_t {
   size_t section;
-  lepton_rsp16_section_t *update;
+  lepton_rsp16_section_t update;
 } lepton_rsp16_section_patch_t;
 
 typedef struct lepton_rsp16_section_map_t {
   size_t size;
-  lepton_rsp16_section_patch_t *updates[];
+  lepton_rsp16_section_patch_t updates[];
 } lepton_rsp16_section_map_t;
 
 typedef struct lepton_rsp_patches_t {

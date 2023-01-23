@@ -160,9 +160,9 @@ void lepton_patch_rsp16(lepton_apuc_t *apuc, lepton_rsp16_t *patch) {
 void lepton_patch_partial_rsp16(lepton_apuc_t *apuc,
                                 lepton_rsp16_section_map_t *patch) {
   lepton_foreach_range(i, patch->size, {
-    lepton_rsp16_section_patch_t *section_patch = patch->updates[i];
+    lepton_rsp16_section_patch_t *section_patch = &patch->updates[i];
     size_t section = section_patch->section;
-    lepton_rsp16_section_t *update = section_patch->update;
+    lepton_rsp16_section_t *update = &section_patch->update;
     memcpy(&apuc->rsp16[section], update, LEPTON_RSP16_SECTION_SIZE);
   });
 }
@@ -297,7 +297,7 @@ void lepton_init_apuc(lepton_apuc_t *apuc) {
   lepton_reset_lgl(apuc);
 
   lepton_init_vr(&apuc->rwinh_filter, true);
-  apuc->rwinh_sects = 0xFFFF;
+  apuc->rwinh_sects = 0x0000;
 }
 
 void lepton_free_apuc(lepton_apuc_t *apuc) {
@@ -434,17 +434,12 @@ void lepton_free_l2_patch(lepton_l2_patch_t *patch) {
 
 void lepton_free_rsp16_section_patch(lepton_rsp16_section_patch_t *patch) {
   if (patch != NULL) {
-    lepton_free_rsp16_section(patch->update);
     free(patch);
   }
 }
 
 void lepton_free_rsp16_section_map(lepton_rsp16_section_map_t *patch) {
   if (patch != NULL) {
-    lepton_foreach_range(i, patch->size, {
-      lepton_rsp16_section_patch_t *update = patch->updates[i];
-      lepton_free_rsp16_section_patch(update);
-    });
     free(patch);
   }
 }
@@ -2560,17 +2555,12 @@ lepton_rsp16_section_map_t *lepton_rsp16_from_rl(lepton_apuc_t *apuc,
   size_t num_sections = lepton_count_masked_sections(mask);
   lepton_rsp16_section_map_t *patch =
       malloc(sizeof(lepton_rsp16_section_map_t) +
-             num_sections * sizeof(lepton_rsp16_section_patch_t *));
+             num_sections * sizeof(lepton_rsp16_section_patch_t));
   patch->size = num_sections;
-
-  lepton_foreach_range(ipatch, num_sections, {
-    patch->updates[ipatch] = malloc(sizeof(lepton_rsp16_section_patch_t));
-  });
 
   size_t nth_update = 0;
   lepton_foreach_masked_section(mask, section, {
-    patch->updates[nth_update]->section = section;
-    patch->updates[nth_update]->update = malloc(sizeof(lepton_rsp16_section_t));
+    patch->updates[nth_update].section = section;
     nth_update += 1;
   });
 
@@ -2581,9 +2571,13 @@ lepton_rsp16_section_map_t *lepton_rsp16_from_rl(lepton_apuc_t *apuc,
     size_t upper = lower + step_size;
     size_t nth_update = 0;
     lepton_foreach_masked_section(mask, section, {
-      lepton_any_plat_in_place(
-          &patch->updates[nth_update]->update,
-          &apuc->rl, section, step, lower, upper);
+      patch->updates[nth_update].update[step] = false;
+      lepton_foreach_range(plat, lower, upper, {
+        if (apuc->rl[section][plat]) {
+          patch->updates[nth_update].update[step] = true;
+          break;
+        }
+      });
       nth_update += 1;
     });
   });

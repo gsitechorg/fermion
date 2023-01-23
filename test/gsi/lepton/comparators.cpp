@@ -60,6 +60,10 @@ bool lepton_rsp16_eq(lepton_rsp16_t *lhs, lepton_rsp16_t *rhs) {
   return memcmp(lhs, rhs, LEPTON_RSP16_SIZE) == 0;
 }
 
+bool lepton_rsp16_eq_rl(lepton_rsp16_t *lhs, lepton_rl_t *rhs) {
+  return lepton_rl_eq_rsp16(rhs, lhs);
+}
+
 bool lepton_rsp16_eq_rsp256(lepton_rsp16_t *lhs, lepton_rsp256_t *rhs) {
   lepton_foreach_rsp256_plat(rsp256_plat, {
     size_t lower_rsp16 = rsp256_plat * 16;

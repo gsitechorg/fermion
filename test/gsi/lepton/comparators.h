@@ -35,6 +35,8 @@ bool lepton_l2_eq(lepton_l2_t *lhs, lepton_l2_t *rhs);
 
 bool lepton_rsp16_eq(lepton_rsp16_t *lhs, lepton_rsp16_t *rhs);
 
+bool lepton_rsp16_eq_rl(lepton_rsp16_t *lhs, lepton_rl_t *rhs);
+
 bool lepton_rsp16_eq_rsp256(lepton_rsp16_t *lhs, lepton_rsp256_t *rhs);
 
 bool lepton_rsp256_eq_rsp16(lepton_rsp256_t *lhs, lepton_rsp16_t *rhs);
