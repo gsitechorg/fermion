@@ -236,6 +236,7 @@ void lepton_bank_group_row(size_t l1_addr, size_t *bank, size_t *group,
 
 typedef bool lepton_vr_t[LEPTON_NUM_SECTIONS][LEPTON_NUM_PLATS_PER_APUC];
 typedef lepton_vr_t lepton_rl_t;
+typedef lepton_vr_t lepton_brsp16_t;
 typedef uint16_t lepton_sm_t;
 typedef uint32_t lepton_re_t;
 typedef uint16_t lepton_ewe_t;
@@ -564,7 +565,7 @@ lepton_gl_t *lepton_ternary_expr(lepton_apuc_t *apuc,
 
 size_t lepton_count_masked_sections(lepton_sm_t mask);
 
-lepton_vr_t *lepton_brsp16(lepton_rsp16_t *rsp16);
+lepton_brsp16_t *lepton_brsp16(lepton_rsp16_t *rsp16);
 
 //  ___         _               _   _
 // |_ _|_ _  __| |_ _ _ _  _ __| |_(_)___ _ _  ___

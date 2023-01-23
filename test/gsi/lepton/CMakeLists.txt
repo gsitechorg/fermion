@@ -4,6 +4,7 @@ target_sources(test-lepton PUBLIC
   generators.cpp
   utils.cpp
   test_apuc.cpp
+  test_brsp16.cpp
   test_ggl_from_l1.cpp
   test_ggl_from_rl.cpp
   test_gl_from_rl.cpp

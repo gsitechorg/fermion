@@ -1012,7 +1012,7 @@ size_t lepton_count_masked_sections(lepton_sm_t mask) {
   return num_masked_sections;
 }
 
-lepton_vr_t *lepton_brsp16(lepton_rsp16_t *rsp16) {
+lepton_brsp16_t *lepton_brsp16(lepton_rsp16_t *rsp16) {
   lepton_vr_t *brsp16 = malloc(sizeof(lepton_vr_t));
   lepton_foreach_rsp16_plat(rsp16_plat, {
     size_t lower = rsp16_plat * 16;
@@ -1195,7 +1195,7 @@ void lepton_sb_op_eq_rsp16_in_place(lepton_apuc_t *apuc, lepton_sm_t mask,
                                     lepton_vr_t *vrs[], size_t num_vrs,
                                     lepton_binary_op_t op,
                                     lepton_rsp16_t *rsp16) {
-  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_brsp16_t *filtered_brsp16 = lepton_brsp16(rsp16);
   lepton_foreach_masked_section(mask, section, {
     lepton_foreach_vr_plat(plat, {
       (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
@@ -1233,7 +1233,7 @@ lepton_wordline_map_t *lepton_sb_op_eq_rsp16(lepton_apuc_t *apuc,
            + num_vrs * num_sections * sizeof(lepton_wordline_patch_t));
   patch->size = num_vrs * num_sections;
 
-  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_brsp16_t *filtered_brsp16 = lepton_brsp16(rsp16);
   lepton_foreach_masked_section(mask, section, {
     lepton_foreach_vr_plat(plat, {
       (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
@@ -1544,7 +1544,7 @@ lepton_wordline_map_t *lepton_rl_op_eq_rl(lepton_apuc_t *apuc,
 void lepton_rl_op_eq_rsp16_in_place(lepton_apuc_t *apuc, lepton_sm_t mask,
                                     lepton_binary_op_t op,
                                     lepton_rsp16_t *rsp16) {
-  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_brsp16_t *filtered_brsp16 = lepton_brsp16(rsp16);
   lepton_foreach_masked_section(mask, section, {
     lepton_foreach_vr_plat(plat, {
       (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
@@ -1577,7 +1577,7 @@ lepton_wordline_map_t *lepton_rl_op_eq_rsp16(lepton_apuc_t *apuc,
            + num_sections * sizeof(lepton_wordline_patch_t));
   patch->size = num_sections;
 
-  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_brsp16_t *filtered_brsp16 = lepton_brsp16(rsp16);
   lepton_foreach_masked_section(mask, section, {
     lepton_foreach_vr_plat(plat, {
       (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
@@ -2012,7 +2012,7 @@ void lepton_rl_op_eq_sb_and_rsp16_in_place(lepton_apuc_t *apuc,
                                            lepton_rsp16_t *rsp16) {
   lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
 
-  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_brsp16_t *filtered_brsp16 = lepton_brsp16(rsp16);
   lepton_foreach_masked_section(mask, section, {
     lepton_foreach_vr_plat(plat, {
       (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
@@ -2056,7 +2056,7 @@ lepton_rl_op_eq_sb_and_rsp16(lepton_apuc_t *apuc, lepton_sm_t mask,
 
   lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
 
-  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_brsp16_t *filtered_brsp16 = lepton_brsp16(rsp16);
   lepton_foreach_masked_section(mask, section, {
     lepton_foreach_vr_plat(plat, {
       (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
@@ -2377,7 +2377,7 @@ void lepton_rl_from_sb_binop_rsp16_in_place(lepton_apuc_t *apuc,
                                             lepton_rsp16_t *rsp16) {
   lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
 
-  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_brsp16_t *filtered_brsp16 = lepton_brsp16(rsp16);
   lepton_foreach_masked_section(mask, section, {
     lepton_foreach_vr_plat(plat, {
       (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
@@ -2418,7 +2418,7 @@ lepton_rl_from_sb_binop_rsp16(lepton_apuc_t *apuc, lepton_sm_t mask,
 
   lepton_wordline_t *sbdata = malloc(sizeof(lepton_wordline_t));
 
-  lepton_vr_t *filtered_brsp16 = lepton_brsp16(rsp16);
+  lepton_brsp16_t *filtered_brsp16 = lepton_brsp16(rsp16);
   lepton_foreach_masked_section(mask, section, {
     lepton_foreach_vr_plat(plat, {
       (*filtered_brsp16)[section][plat] &= apuc->rwinh_filter[section][plat];
