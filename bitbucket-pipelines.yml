@@ -14,6 +14,14 @@ pipelines:
           - cd ..
           - mamba env create -f environment.yml
           - conda activate lepton
+          - git clone https://github.com/emil-e/rapidcheck.git
+          - cd rapidcheck
+          - mkdir build
+          - cd build
+          - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DRC_ENABLE_GTEST=ON ..
+          - make -j$(nproc)
+          - make install
+          - cd ../..
           - pip install git+ssh://git@bitbucket.org/gsitech/belex.git@d59814b0ae33b7e4b160e8aa910f1169ef054a84#egg=belex
           - pip install git+ssh://git@bitbucket.org/gsitech/belex-libs.git@3facd5241f2e8e12c3aa4afbd8d3e45751ccf63e#egg=belex-libs
           - DEBUG_MODE=true ./setup.sh --prefix ~/local --enable-tests --num-cores $(nproc)
