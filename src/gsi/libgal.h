@@ -1,5 +1,5 @@
-#ifndef LEPTON_GSI_LIBGAL_H
-#define LEPTON_GSI_LIBGAL_H
+#ifndef BARYON_GSI_LIBGAL_H
+#define BARYON_GSI_LIBGAL_H
 
 #include <inttypes.h>
 
@@ -41,4 +41,4 @@ void *gal_mem_handle_to_apu_ptr(gal_mem_handle_t handle);
 }
 #endif
 
-#endif // LEPTON_GSI_LIBGAL_H
+#endif // BARYON_GSI_LIBGAL_H

@@ -1,4 +1,4 @@
-target_sources(test-lepton PUBLIC
+target_sources(test-baryon PUBLIC
   fixtures.cpp
   test_gvml_add_u16.cpp
   test_gvml_cpy_imm_16.cpp
@@ -8,4 +8,4 @@ target_sources(test-lepton PUBLIC
   test_libgal.cpp
 )
 
-add_subdirectory(lepton)
+add_subdirectory(baryon)

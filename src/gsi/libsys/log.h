@@ -1,5 +1,5 @@
-#ifndef LEPTON_GSI_LIBSYS_LOG_H
-#define LEPTON_GSI_LIBSYS_LOG_H
+#ifndef BARYON_GSI_LIBSYS_LOG_H
+#define BARYON_GSI_LIBSYS_LOG_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,4 +66,4 @@ void some_function2();
 }
 #endif
 
-#endif // LEPTON_GSI_LIBSYS_LOG_H
+#endif // BARYON_GSI_LIBSYS_LOG_H

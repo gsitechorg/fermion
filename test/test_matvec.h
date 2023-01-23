@@ -1,5 +1,5 @@
-#ifndef __LEPTON_TEST_MATVEC_H__
-#define __LEPTON_TEST_MATVEC_H__
+#ifndef __BARYON_TEST_MATVEC_H__
+#define __BARYON_TEST_MATVEC_H__
 
 #include <stddef.h>
 #include <stdint.h>
@@ -26,6 +26,6 @@ uint16_t *alloc_random_i16s(unsigned int count);
 void initialize_A(uint32_t k, uint16_t *a);
 void initialize_B(uint32_t k, uint32_t n, uint16_t *B);
 
-gsi_prod_status_t lepton_test_matvec_device(void *in_buf, void *out_buf);
+gsi_prod_status_t baryon_test_matvec_device(void *in_buf, void *out_buf);
 
-#endif // __LEPTON_TEST_MATVEC_H__
+#endif // __BARYON_TEST_MATVEC_H__

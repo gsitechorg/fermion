@@ -1,22 +1,22 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include <gsi/lepton/gvml_fragments.h>
+#include <gsi/baryon/gvml_fragments.h>
 
 #include "libapl.h"
 #include "libgvml.h"
 #include "libgvml_element_wise.h"
 #include "libgvml_memory.h"
 
-lepton_apuc_t apuc;
-lepton_seu_layer_t seu_layer;
+baryon_apuc_t apuc;
+baryon_seu_layer_t seu_layer;
 
-void lepton_init() {
-  /* apuc = malloc(sizeof(lepton_apuc_t)); */
-  lepton_init_apuc(&apuc);
+void baryon_init() {
+  /* apuc = malloc(sizeof(baryon_apuc_t)); */
+  baryon_init_apuc(&apuc);
 
-  /* seu_layer = malloc(sizeof(lepton_seu_layer_t)); */
-  lepton_init_seu_layer(&seu_layer);
+  /* seu_layer = malloc(sizeof(baryon_seu_layer_t)); */
+  baryon_init_seu_layer(&seu_layer);
 }
 
 int gvml_apl_init() {
@@ -46,7 +46,7 @@ int gvml_apl_init() {
 }
 
 void gvml_init() {
-  lepton_init();
+  baryon_init();
   gvml_apl_init();
 }
 
@@ -59,18 +59,18 @@ void gvml_init_once() {
   }
 }
 
-void lepton_exit() {
-  /* printf("lepton_free_apuc(apuc)\n"); */
-  /* lepton_free_apuc(apuc); */
-  /* apuc = (lepton_apuc_t *) NULL; */
+void baryon_exit() {
+  /* printf("baryon_free_apuc(apuc)\n"); */
+  /* baryon_free_apuc(apuc); */
+  /* apuc = (baryon_apuc_t *) NULL; */
 
-  /* printf("lepton_free_seu_layer(seu_layer)\n"); */
-  /* lepton_free_seu_layer(seu_layer); */
-  /* seu_layer = (lepton_seu_layer_t *) NULL; */
+  /* printf("baryon_free_seu_layer(seu_layer)\n"); */
+  /* baryon_free_seu_layer(seu_layer); */
+  /* seu_layer = (baryon_seu_layer_t *) NULL; */
 }
 
 void gvml_exit() {
-  lepton_exit();
+  baryon_exit();
   init_done = false;
 }
 

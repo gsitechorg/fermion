@@ -1,5 +1,5 @@
-#ifndef LEPTON_GSI_LIBGVML_ELEMENT_WISE_H
-#define LEPTON_GSI_LIBGVML_ELEMENT_WISE_H
+#ifndef BARYON_GSI_LIBGVML_ELEMENT_WISE_H
+#define BARYON_GSI_LIBGVML_ELEMENT_WISE_H
 
 #include <inttypes.h>
 
@@ -17,4 +17,4 @@ void gvml_mul_u16(enum gvml_vr16 vdst, enum gvml_vr16 vsrc1, enum gvml_vr16 vsrc
 }
 #endif
 
-#endif // LEPTON_GSI_LIBGVML_ELEMENT_WISE_H
+#endif // BARYON_GSI_LIBGVML_ELEMENT_WISE_H

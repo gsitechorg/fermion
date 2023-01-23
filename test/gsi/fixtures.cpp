@@ -2,10 +2,10 @@
 
 #include "fixtures.h"
 
-void LeptonGVMLTest::SetUp() {
+void BaryonGVMLTest::SetUp() {
   gvml_init();
 }
 
-void LeptonGVMLTest::TearDown() {
+void BaryonGVMLTest::TearDown() {
   gvml_exit();
 }

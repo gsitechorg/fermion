@@ -1,5 +1,5 @@
-#ifndef LEPTON_GSI_LIBGVML_MEMORY_H
-#define LEPTON_GSI_LIBGVML_MEMORY_H
+#ifndef BARYON_GSI_LIBGVML_MEMORY_H
+#define BARYON_GSI_LIBGVML_MEMORY_H
 
 #include <stdbool.h>
 
@@ -20,4 +20,4 @@ void gvml_store_vmr_16(enum gvml_vm_reg vmsrc, unsigned int bank, bool l2_ready_
 }
 #endif
 
-#endif // LEPTON_GSI_LIBGVML_MEMORY_H
+#endif // BARYON_GSI_LIBGVML_MEMORY_H

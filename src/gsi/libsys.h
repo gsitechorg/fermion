@@ -1,5 +1,5 @@
-#ifndef LEPTON_GSI_LIBSYS_H
-#define LEPTON_GSI_LIBSYS_H
+#ifndef BARYON_GSI_LIBSYS_H
+#define BARYON_GSI_LIBSYS_H
 
 #include <stdbool.h>
 #include <inttypes.h>
@@ -23,4 +23,4 @@ int gsi_sim_destroy_simulator(void);
 }
 #endif
 
-#endif // LEPTON_GSI_LIBSYS_H
+#endif // BARYON_GSI_LIBSYS_H

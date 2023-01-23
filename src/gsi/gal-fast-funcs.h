@@ -1,5 +1,5 @@
-#ifndef LEPTON_GSI_GAL_FAST_FUNCS_H
-#define LEPTON_GSI_GAL_FAST_FUNCS_H
+#ifndef BARYON_GSI_GAL_FAST_FUNCS_H
+#define BARYON_GSI_GAL_FAST_FUNCS_H
 
 #include "libgal.h"
 
@@ -31,4 +31,4 @@ void gal_fast_l2dma_mem_to_l2_start(uint32_t apc_id,
 }
 #endif
 
-#endif // LEPTON_GSI_GAL_FAST_FUNCS_H
+#endif // BARYON_GSI_GAL_FAST_FUNCS_H

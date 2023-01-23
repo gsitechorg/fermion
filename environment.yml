@@ -1,4 +1,4 @@
-name: lepton
+name: baryon
 channels:
   - conda-forge
   - gsi

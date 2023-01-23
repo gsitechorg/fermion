@@ -48,7 +48,7 @@ int gdl_context_desc_get(struct gdl_context_desc *ctx_desc, unsigned int count){
     if (count != 1) {
         error("The count ID must be equal to 1");
     }
-    strcpy(ctx_desc->parent_device_name, "Lepton emulator");
+    strcpy(ctx_desc->parent_device_name, "Baryon emulator");
     ctx_desc->ctx_id = 1;
     ctx_desc->num_apucs = 4;
     ctx_desc->num_apus = 1;

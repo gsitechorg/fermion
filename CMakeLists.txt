@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25.1 FATAL_ERROR)
-project(lepton LANGUAGES C CXX)
+project(baryon LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -12,38 +12,38 @@ message("belex-aot: ${BELEX_AOT}")
 
 add_custom_command(
     OUTPUT
-        "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.c"
-        "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.h"
+        "${CMAKE_BINARY_DIR}/gensrc/gsi/baryon/gvml_fragments.c"
+        "${CMAKE_BINARY_DIR}/gensrc/gsi/baryon/gvml_fragments.h"
     COMMAND "${BELEX_AOT}"
         -O0
-        --source-file "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.c"
-        --header-file "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.h"
-        --target lepton
+        --source-file "${CMAKE_BINARY_DIR}/gensrc/gsi/baryon/gvml_fragments.c"
+        --header-file "${CMAKE_BINARY_DIR}/gensrc/gsi/baryon/gvml_fragments.h"
+        --target baryon
         --no-uniquify-nyms
-        "${CMAKE_SOURCE_DIR}/src/gsi/lepton/fragments.py"
+        "${CMAKE_SOURCE_DIR}/src/gsi/baryon/fragments.py"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     DEPENDS
-        "${CMAKE_SOURCE_DIR}/src/gsi/lepton/fragments.py"
+        "${CMAKE_SOURCE_DIR}/src/gsi/baryon/fragments.py"
     VERBATIM
 )
 
-add_library(gsilepton
-    src/gsi/lepton/operations.c
-    src/gsi/lepton/apuc.c
-    src/gsi/lepton/seu_layer.c
-    "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.c"
+add_library(gsibaryon
+    src/gsi/baryon/operations.c
+    src/gsi/baryon/apuc.c
+    src/gsi/baryon/seu_layer.c
+    "${CMAKE_BINARY_DIR}/gensrc/gsi/baryon/gvml_fragments.c"
     src/gsi/libapl.c
     src/gsi/libgal.c
     src/gsi/libgvml.c
     src/gsi/libgdl.c
     src/gsi/libsys.c
 )
-target_include_directories(gsilepton PUBLIC
+target_include_directories(gsibaryon PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
   "${CMAKE_BINARY_DIR}/gensrc"
 )
 
-install(TARGETS gsilepton
+install(TARGETS gsibaryon
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib

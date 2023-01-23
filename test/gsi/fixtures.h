@@ -3,7 +3,7 @@
 
 #include <gtest/gtest.h>
 
-class LeptonGVMLTest : public ::testing::Test {
+class BaryonGVMLTest : public ::testing::Test {
 protected:
   void SetUp() override;
   void TearDown() override;

@@ -1,5 +1,5 @@
-#ifndef LEPTON_GSI_LIBGDL_H
-#define LEPTON_GSI_LIBGDL_H
+#ifndef BARYON_GSI_LIBGDL_H
+#define BARYON_GSI_LIBGDL_H
 
 #include <inttypes.h>
 
@@ -130,4 +130,4 @@ void *gdl_mem_handle_to_host_ptr(gdl_mem_handle_t handle);
 }
 #endif
 
-#endif // LEPTON_GSI_LIBGDL_H
+#endif // BARYON_GSI_LIBGDL_H

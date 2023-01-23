@@ -1,5 +1,5 @@
-#ifndef LEPTON_GSI_SIM_CONFIG_H
-#define LEPTON_GSI_SIM_CONFIG_H
+#ifndef BARYON_GSI_SIM_CONFIG_H
+#define BARYON_GSI_SIM_CONFIG_H
 
 #include <inttypes.h>
 
@@ -18,4 +18,4 @@ struct gsi_sim_contexts {
 }
 #endif
 
-#endif // LEPTON_GSI_SIM_CONFIG_H
+#endif // BARYON_GSI_SIM_CONFIG_H
