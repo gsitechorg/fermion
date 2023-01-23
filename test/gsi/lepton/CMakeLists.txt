@@ -2,6 +2,7 @@ target_sources(test-lepton PUBLIC
   comparators.cpp
   fixtures.cpp
   generators.cpp
+  utils.cpp
   test_operations.cpp
   test_ggl_from_l1.cpp
   test_ggl_from_rl.cpp
@@ -20,4 +21,5 @@ target_sources(test-lepton PUBLIC
   test_sb_from_src.cpp
   test_src.cpp
   test_apuc.cpp
+  test_seu_layer.cpp
 )

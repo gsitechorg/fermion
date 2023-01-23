@@ -30,10 +30,10 @@ RC_GTEST_PROP(operations, right, ()) {
   lepton_right_in_place(lhs, rhs, actual);
   RC_ASSERT(lepton_wordline_eq(actual, expected));
 
-  free(actual);
-  free(expected);
-  free(rhs);
-  free(lhs);
+  lepton_free_wordline(actual);
+  lepton_free_wordline(expected);
+  lepton_free_wordline(rhs);
+  lepton_free_wordline(lhs);
 }
 
 RC_GTEST_PROP(operations, inv_right, ()) {
@@ -56,10 +56,10 @@ RC_GTEST_PROP(operations, inv_right, ()) {
   lepton_inv_right_in_place(lhs, rhs, actual);
   RC_ASSERT(lepton_wordline_eq(actual, expected));
 
-  free(actual);
-  free(expected);
-  free(rhs);
-  free(lhs);
+  lepton_free_wordline(actual);
+  lepton_free_wordline(expected);
+  lepton_free_wordline(rhs);
+  lepton_free_wordline(lhs);
 }
 
 RC_GTEST_PROP(operations, left_or_right, ()) {
@@ -85,10 +85,10 @@ RC_GTEST_PROP(operations, left_or_right, ()) {
   lepton_left_or_right_in_place(lhs, rhs, actual);
   RC_ASSERT(lepton_wordline_eq(actual, expected));
 
-  free(actual);
-  free(expected);
-  free(rhs);
-  free(lhs);
+  lepton_free_wordline(actual);
+  lepton_free_wordline(expected);
+  lepton_free_wordline(rhs);
+  lepton_free_wordline(lhs);
 }
 
 RC_GTEST_PROP(operations, left_or_inv_right, ()) {
@@ -114,10 +114,10 @@ RC_GTEST_PROP(operations, left_or_inv_right, ()) {
   lepton_left_or_inv_right_in_place(lhs, rhs, actual);
   RC_ASSERT(lepton_wordline_eq(actual, expected));
 
-  free(actual);
-  free(expected);
-  free(rhs);
-  free(lhs);
+  lepton_free_wordline(actual);
+  lepton_free_wordline(expected);
+  lepton_free_wordline(rhs);
+  lepton_free_wordline(lhs);
 }
 
 RC_GTEST_PROP(operations, left_and_right, ()) {
@@ -143,10 +143,10 @@ RC_GTEST_PROP(operations, left_and_right, ()) {
   lepton_left_and_right_in_place(lhs, rhs, actual);
   RC_ASSERT(lepton_wordline_eq(actual, expected));
 
-  free(actual);
-  free(expected);
-  free(rhs);
-  free(lhs);
+  lepton_free_wordline(actual);
+  lepton_free_wordline(expected);
+  lepton_free_wordline(rhs);
+  lepton_free_wordline(lhs);
 }
 
 RC_GTEST_PROP(operations, left_and_inv_right, ()) {
@@ -172,10 +172,10 @@ RC_GTEST_PROP(operations, left_and_inv_right, ()) {
   lepton_left_and_inv_right_in_place(lhs, rhs, actual);
   RC_ASSERT(lepton_wordline_eq(actual, expected));
 
-  free(actual);
-  free(expected);
-  free(rhs);
-  free(lhs);
+  lepton_free_wordline(actual);
+  lepton_free_wordline(expected);
+  lepton_free_wordline(rhs);
+  lepton_free_wordline(lhs);
 }
 
 RC_GTEST_PROP(operations, left_xor_right, ()) {
@@ -201,10 +201,10 @@ RC_GTEST_PROP(operations, left_xor_right, ()) {
   lepton_left_xor_right_in_place(lhs, rhs, actual);
   RC_ASSERT(lepton_wordline_eq(actual, expected));
 
-  free(actual);
-  free(expected);
-  free(rhs);
-  free(lhs);
+  lepton_free_wordline(actual);
+  lepton_free_wordline(expected);
+  lepton_free_wordline(rhs);
+  lepton_free_wordline(lhs);
 }
 
 RC_GTEST_PROP(operations, left_xor_inv_right, ()) {
@@ -230,10 +230,10 @@ RC_GTEST_PROP(operations, left_xor_inv_right, ()) {
   lepton_left_xor_inv_right_in_place(lhs, rhs, actual);
   RC_ASSERT(lepton_wordline_eq(actual, expected));
 
-  free(actual);
-  free(expected);
-  free(rhs);
-  free(lhs);
+  lepton_free_wordline(actual);
+  lepton_free_wordline(expected);
+  lepton_free_wordline(rhs);
+  lepton_free_wordline(lhs);
 }
 
 RC_GTEST_PROP(operations, inv_left_and_right, ()) {
@@ -259,10 +259,10 @@ RC_GTEST_PROP(operations, inv_left_and_right, ()) {
   lepton_inv_left_and_right_in_place(lhs, rhs, actual);
   RC_ASSERT(lepton_wordline_eq(actual, expected));
 
-  free(actual);
-  free(expected);
-  free(rhs);
-  free(lhs);
+  lepton_free_wordline(actual);
+  lepton_free_wordline(expected);
+  lepton_free_wordline(rhs);
+  lepton_free_wordline(lhs);
 }
 
 RC_GTEST_PROP(operations, inv_left_and_inv_right, ()) {
@@ -288,8 +288,8 @@ RC_GTEST_PROP(operations, inv_left_and_inv_right, ()) {
   lepton_inv_left_and_inv_right_in_place(lhs, rhs, actual);
   RC_ASSERT(lepton_wordline_eq(actual, expected));
 
-  free(actual);
-  free(expected);
-  free(rhs);
-  free(lhs);
+  lepton_free_wordline(actual);
+  lepton_free_wordline(expected);
+  lepton_free_wordline(rhs);
+  lepton_free_wordline(lhs);
 }

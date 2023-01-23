@@ -28,24 +28,24 @@ extern "C" {
 #define lepton_foreach_l2_reg(l2_reg, block) \
   lepton_foreach_range(l2_reg, LEPTON_NUM_L2_REGS, block)
 
-#define lepton_foreach_re_row(re_val, row_number, block) \
-  lepton_foreach_range(row_number, LEPTON_NUM_SBS, {     \
-    if ((1 << row_number) & (re_val)) {                  \
-      block;                                             \
-    }                                                    \
+#define lepton_foreach_re_row(re_val, row_number, block)                       \
+  lepton_foreach_range(row_number, LEPTON_NUM_SBS, {                           \
+    if ((1 << row_number) & (re_val)) {                                        \
+      block;                                                                   \
+    }                                                                          \
   })
 
-#define lepton_foreach_ewe_row(ewe_val, row_number, block)             \
-  {                                                                    \
-    size_t group = (ewe_val >> 8);                                     \
-    size_t offset = LEPTON_NUM_EWE_GROUPS * group;                     \
-    size_t mask = (ewe_val & 0xFF);                                    \
-    lepton_foreach_range(group_number, LEPTON_NUM_VRS_PER_EWE_GROUP, { \
-      if ((1 << group_number) & (mask)) {                              \
-        size_t row_number = offset + group_number;                     \
-        block;                                                         \
-      }                                                                \
-    });                                                                \
+#define lepton_foreach_ewe_row(ewe_val, row_number, block)                     \
+  {                                                                            \
+    size_t group = (ewe_val) >> 8;                                             \
+    size_t offset = group * 8;                                                 \
+    size_t mask = (ewe_val) & 0xFF;                                            \
+    lepton_foreach_range(group_number, LEPTON_NUM_VRS_PER_EWE_GROUP, {         \
+      if ((1 << group_number) & (mask)) {                                      \
+        size_t row_number = offset + group_number;                             \
+        block;                                                                 \
+      }                                                                        \
+    });                                                                        \
   }
 
 typedef struct lepton_seu_layer_t {
