@@ -16,6 +16,7 @@ pipelines:
           - conda activate lepton
           - git clone https://github.com/emil-e/rapidcheck.git
           - cd rapidcheck
+          - git checkout 1505cbbce733bde3b78042cf2e9309c0b7f227a2
           - mkdir build
           - cd build
           - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX -DRC_ENABLE_GTEST=ON ..
