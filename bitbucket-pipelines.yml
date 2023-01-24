@@ -29,5 +29,6 @@ pipelines:
           - cd gtest-parallel
           - git checkout f4d65b555894b301699c7c3c52906f72ea052e83
           - ln -sv "$PWD/gtest-parallel" "$CONDA_PREFIX/bin/gtest-parallel"
+          - cd ..
           - DEBUG_MODE=true ./setup.sh --prefix ~/local --enable-tests --num-cores $(nproc)
           - gtest-parallel ./build/test/test-baryon
