@@ -31,4 +31,4 @@ pipelines:
           - ln -sv "$PWD/gtest-parallel" "$CONDA_PREFIX/bin/gtest-parallel"
           - cd ..
           - DEBUG_MODE=true ./setup.sh --prefix ~/local --enable-tests --num-cores $(nproc)
-          - gtest-parallel ./build/test/test-baryon
+          - gtest-parallel --print_test_times ./build/test/test-baryon
