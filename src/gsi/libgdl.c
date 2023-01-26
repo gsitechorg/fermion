@@ -75,6 +75,13 @@ gdl_mem_handle_t gdl_mem_alloc_nonull(gdl_context_handle_t ctx_handler,
     return (uintptr_t)mem;
 }
 
+gdl_mem_handle_t gdl_mem_alloc_aligned(gdl_context_handle_t ctx_handler,
+                                       unsigned long long size,
+                                       gdl_mem_pools pool,
+                                       gdl_alloc_alignment alignment) {
+  return gdl_mem_alloc_nonull(ctx_handler, size, pool);
+}
+
 void gdl_mem_free(gdl_mem_handle_t buffer) {
     free((void*)buffer);
 }
@@ -164,4 +171,3 @@ int gdl_run_task_timeout(gdl_context_handle_t ctx_handler,
     printf("Done task.\n");
     return r;
 }
-

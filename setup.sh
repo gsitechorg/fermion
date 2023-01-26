@@ -18,10 +18,13 @@ declare PRINT_HELP
 declare INSTALL_PREFIX
 declare INSTALL_BARYON
 declare ENABLE_TESTS
+declare RUN_TESTS
 
 BUILD_TYPE=Debug
-NUM_CORES=1
+NUM_CORES=$(nproc)
 
+BASEDIR="$(dirname "$0")"
+BUILD_DIR="${BASEDIR}/build"
 SCRIPT_NAME="$(basename "$0")"
 
 function print-help {
@@ -31,10 +34,11 @@ Software emulator for the GSI APU and libraries like libs-gvml and sys-apu.
 Options:
   -h|--help       Print this help text.
   --prefix        Specify the installation prefix (default: /usr/local)
+  --test          Run tests after building them.
   --install       Install Baryon after building it.
   --enable-tests  Build the testing suite for Baryon.
   --build-type    CMake build type (Debug, Release, etc., default: $BUILD_TYPE)
-  --num-cores     Number of CPU cores to build the library on.
+  --num-cores     Number of CPU cores to build the library on (default: ${NUM_CORES}).
 
 Usage:
   $SCRIPT_NAME [--help] \
@@ -63,14 +67,6 @@ function parse-opts {
                 INSTALL_PREFIX="$2"
                 shift 2
                 ;;
-            --install)
-                INSTALL_BARYON=true
-                shift
-                ;;
-            --enable-tests)
-                ENABLE_TESTS=true
-                shift
-                ;;
             --build-type)
                 BUILD_TYPE=$2
                 shift 2
@@ -78,6 +74,19 @@ function parse-opts {
             --num-cores)
                 NUM_CORES=$2
                 shift 2
+                ;;
+            --enable-tests)
+                ENABLE_TESTS=true
+                shift
+                ;;
+            --test)
+                ENABLE_TESTS=true
+                RUN_TESTS=true
+                shift
+                ;;
+            --install)
+                INSTALL_BARYON=true
+                shift
                 ;;
             -[a-z][a-z]*)
                 shift
@@ -100,13 +109,7 @@ function parse-opts {
         INSTALL_PREFIX="/usr/local"
     fi
 
-    return $RETURN_CODE
-}
-
-function build-baryon {
-    local RETURN_CODE
-
-    mkdir -p build
+    mkdir -p "$INSTALL_PREFIX"
     RETURN_CODE=$?
 
     if (( RETURN_CODE != EXIT_SUCCESS )); then
@@ -114,7 +117,23 @@ function build-baryon {
         return $EXIT_MKDIR_FAILED
     fi
 
-    pushd build
+    INSTALL_PREFIX="$(cd "$INSTALL_PREFIX"; pwd)"
+
+    return $RETURN_CODE
+}
+
+function build-baryon {
+    local RETURN_CODE
+
+    mkdir -p "$BUILD_DIR"
+    RETURN_CODE=$?
+
+    if (( RETURN_CODE != EXIT_SUCCESS )); then
+        echo "mkdir failed with status $RETURN_CODE" 1>&2
+        return $EXIT_MKDIR_FAILED
+    fi
+
+    pushd "$BUILD_DIR"
 
     cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
           -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
@@ -140,18 +159,38 @@ function build-baryon {
     return $EXIT_SUCCESS
 }
 
+function test-baryon() {
+    local RETURN_CODE
+
+    pushd "$BUILD_DIR"
+
+    gtest-parallel \
+        --workers="$NUM_CORES" \
+        --print_test_times \
+        ./test/test-baryon
+    RETURN_CODE=$?
+
+    if (( RETURN_CODE != EXIT_SUCCESS )); then
+        echo "test-baryon failed with status $RETURN_CODE" 1>&2
+        return $EXIT_TEST_FAILED
+    fi
+
+    popd
+
+    return $EXIT_SUCCESS
+}
+
 function install-baryon() {
     local RETURN_CODE
 
-    pushd build
+    pushd "$BUILD_DIR"
 
     if [ -n "$ENABLE_TESTS" ]; then
-        ./test/test-baryon
+        test-baryon
         RETURN_CODE=$?
 
         if (( RETURN_CODE != EXIT_SUCCESS )); then
-            echo "test-baryon failed with status $RETURN_CODE" 1>&2
-            return $EXIT_TEST_FAILED
+            return $RETURN_CODE
         fi
     fi
 
@@ -197,6 +236,13 @@ function main {
 
     if [ -n "$INSTALL_BARYON" ]; then
         install-baryon
+        RETURN_CODE=$?
+
+        if (( RETURN_CODE != EXIT_SUCCESS )); then
+            return $RETURN_CODE
+        fi
+    elif [ -n "$RUN_TESTS" ]; then
+        test-baryon
         RETURN_CODE=$?
 
         if (( RETURN_CODE != EXIT_SUCCESS )); then

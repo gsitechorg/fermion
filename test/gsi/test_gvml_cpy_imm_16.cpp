@@ -1,6 +1,7 @@
 #include <gsi/baryon/apuc.h>
-#include <gsi/libgvml_element_wise.h>
+#include <gsi/common_api.h>
 #include <gsi/libgvml.h>
+#include <gsi/libgvml_element_wise.h>
 
 #include <gtest/gtest.h>
 

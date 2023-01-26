@@ -1,23 +1,13 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include <gsi/baryon/gvml_fragments.h>
+#include <gsi/gvml_fragments.h>
+#include <gsi/common_api.h>
 
 #include "libapl.h"
 #include "libgvml.h"
 #include "libgvml_element_wise.h"
 #include "libgvml_memory.h"
-
-baryon_apuc_t apuc;
-baryon_seu_layer_t seu_layer;
-
-void baryon_init() {
-  /* apuc = malloc(sizeof(baryon_apuc_t)); */
-  baryon_init_apuc(&apuc);
-
-  /* seu_layer = malloc(sizeof(baryon_seu_layer_t)); */
-  baryon_init_seu_layer(&seu_layer);
-}
 
 int gvml_apl_init() {
   apl_set_sm_reg(SM_REG_4, 0xFFFF);
@@ -57,16 +47,6 @@ void gvml_init_once() {
     init_done = true;
     gvml_init();
   }
-}
-
-void baryon_exit() {
-  /* printf("baryon_free_apuc(apuc)\n"); */
-  /* baryon_free_apuc(apuc); */
-  /* apuc = (baryon_apuc_t *) NULL; */
-
-  /* printf("baryon_free_seu_layer(seu_layer)\n"); */
-  /* baryon_free_seu_layer(seu_layer); */
-  /* seu_layer = (baryon_seu_layer_t *) NULL; */
 }
 
 void gvml_exit() {
@@ -118,12 +98,12 @@ void gvml_mul_u16(enum gvml_vr16 res, enum gvml_vr16 x, enum gvml_vr16 y) {
 }
 
 static inline __attribute__((always_inline)) uint8_t
-belex_gal_encode_l2_addr(uint32_t byte_idx, uint32_t bit_idx) {
+baryon_gal_encode_l2_addr(uint32_t byte_idx, uint32_t bit_idx) {
   return (uint8_t)((byte_idx << GSI_L2_CTL_ROW_ADDR_BIT_IDX_BITS) | bit_idx);
 }
 
 static inline __attribute__((always_inline)) uint16_t
-belex_gal_vm_reg_to_set_ext(size_t vm_reg, uint32_t *parity_grp_p,
+baryon_gal_vm_reg_to_set_ext(size_t vm_reg, uint32_t *parity_grp_p,
                             uint32_t *parity_row_p) {
   uint32_t parity_set = vm_reg >> 1;
   uint32_t parity_grp = vm_reg & 1;
@@ -151,7 +131,7 @@ bank_group_row_to_addr(uint32_t bank_id, uint32_t group_id, uint32_t row_id) {
 
 void gvml_load_16(enum gvml_vr16 dst, enum gvml_vm_reg vm_reg) {
   uint32_t parity_grp, parity_src;
-  uint16_t src = belex_gal_vm_reg_to_set_ext(vm_reg,
+  uint16_t src = baryon_gal_vm_reg_to_set_ext(vm_reg,
                                              &parity_grp,
                                              &parity_src);
   uint16_t parity_mask = load_16_parity_mask(parity_grp);
@@ -166,7 +146,7 @@ void gvml_load_16(enum gvml_vr16 dst, enum gvml_vm_reg vm_reg) {
 
 void gvml_store_16(enum gvml_vm_reg vm_reg, enum gvml_vr16 src) {
   uint32_t parity_grp, parity_dst;
-  uint16_t dst = belex_gal_vm_reg_to_set_ext(vm_reg,
+  uint16_t dst = baryon_gal_vm_reg_to_set_ext(vm_reg,
                                              &parity_grp,
                                              &parity_dst);
   uint16_t parity_mask = store_16_parity_mask(parity_grp);
@@ -179,7 +159,7 @@ void gvml_store_16(enum gvml_vm_reg vm_reg, enum gvml_vr16 src) {
   store_16_t0(L1_ADDR_REG0, L1_ADDR_REG1, SM_REG0, RN_REG_G0);
 }
 
-void belex_copy_l2_to_l1_byte(uint32_t dst, uint32_t parity_dst, uint32_t src) {
+void baryon_copy_l2_to_l1_byte(uint32_t dst, uint32_t parity_dst, uint32_t src) {
   apl_set_l1_reg(L1_ADDR_REG_0, dst);
   apl_set_l1_reg(L1_ADDR_REG_1, parity_dst);
   apl_set_l2_reg(L2_ADDR_REG_0, src);
@@ -196,7 +176,7 @@ void _copy_N_l2_to_l1(uint8_t l1_bank_id,
 {
   size_t i;
   uint32_t l1_parity_grp, l1_parity_row;
-  uint32_t l1_grp_row = belex_gal_vm_reg_to_set_ext(vm_reg,
+  uint32_t l1_grp_row = baryon_gal_vm_reg_to_set_ext(vm_reg,
                                                 &l1_parity_grp,
                                                 &l1_parity_row);
   uint8_t l2_addr;
@@ -205,11 +185,11 @@ void _copy_N_l2_to_l1(uint8_t l1_bank_id,
     if (l1_grp >= GSI_L1_NUM_GRPS) {
       l1_grp = 0;
       vm_reg++;
-      l1_grp_row = belex_gal_vm_reg_to_set_ext(vm_reg,
+      l1_grp_row = baryon_gal_vm_reg_to_set_ext(vm_reg,
                                                &l1_parity_grp,
                                                &l1_parity_row);
     }
-    l2_addr = belex_gal_encode_l2_addr(l2_start_byte + i, 0);
+    l2_addr = baryon_gal_encode_l2_addr(l2_start_byte + i, 0);
 
     uint32_t dst_addr = bank_group_row_to_addr(l1_bank_id,
                                                l1_grp,
@@ -219,7 +199,7 @@ void _copy_N_l2_to_l1(uint8_t l1_bank_id,
                                                       l1_parity_grp,
                                                       l1_parity_row);
 
-    belex_copy_l2_to_l1_byte(dst_addr,
+    baryon_copy_l2_to_l1_byte(dst_addr,
                              parity_dst_addr,
                              l2_addr);
   }
@@ -235,7 +215,7 @@ void gvml_load_vmr_16(enum gvml_vm_reg vm_reg, unsigned int l1_bank_id,
   _copy_N_l2_to_l1(l1_bank_id, vm_reg, 0, 2, l2_ready_set, l2_start_byte);
 }
 
-void belex_copy_l1_to_l2_byte(uint32_t dst, uint32_t src, uint32_t parity_src) {
+void baryon_copy_l1_to_l2_byte(uint32_t dst, uint32_t src, uint32_t parity_src) {
   apl_set_l2_reg(L2_ADDR_REG_0, dst);
   apl_set_l1_reg(L1_ADDR_REG_0, src);
   apl_set_l1_reg(L1_ADDR_REG_1, parity_src);
@@ -252,7 +232,7 @@ void _copy_N_l1_to_l2(uint8_t l1_bank_id,
 {
   size_t i;
   uint32_t l1_parity_grp, l1_parity_row;
-  uint32_t l1_grp_row = belex_gal_vm_reg_to_set_ext(vm_reg,
+  uint32_t l1_grp_row = baryon_gal_vm_reg_to_set_ext(vm_reg,
                                                 &l1_parity_grp,
                                                 &l1_parity_row);
   uint8_t l2_addr;
@@ -261,11 +241,11 @@ void _copy_N_l1_to_l2(uint8_t l1_bank_id,
     if (l1_grp >= GSI_L1_NUM_GRPS) {
       l1_grp = 0;
       vm_reg++;
-      l1_grp_row = belex_gal_vm_reg_to_set_ext(vm_reg,
+      l1_grp_row = baryon_gal_vm_reg_to_set_ext(vm_reg,
                                                &l1_parity_grp,
                                                &l1_parity_row);
     }
-    l2_addr = belex_gal_encode_l2_addr(l2_start_byte + i, 0);
+    l2_addr = baryon_gal_encode_l2_addr(l2_start_byte + i, 0);
 
     uint32_t src_addr = bank_group_row_to_addr(l1_bank_id,
                                                l1_grp,
@@ -275,7 +255,7 @@ void _copy_N_l1_to_l2(uint8_t l1_bank_id,
                                                       l1_parity_grp,
                                                       l1_parity_row);
 
-    belex_copy_l1_to_l2_byte(l2_addr,
+    baryon_copy_l1_to_l2_byte(l2_addr,
                              src_addr,
                              parity_src_addr);
   }

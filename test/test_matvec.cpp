@@ -38,14 +38,12 @@ my_dma_l4_to_l2_16k(int apc_id, uint16_t *p16) {
       .l2_mode = GAL_L2T_MODE_64,
       .l2_col_group = 0,
   };
-  /* printf("p16[%d] = 0x%04X\n", 6136, p16[6136]); */
   gal_fast_l2dma_mem_to_l2_start(apc_id, 1, &txn, GAL_L2DMA_L2_READY_SET);
 }
 
 static inline __attribute__((always_inline)) void
 my_dma_l4_to_l2_32k(uint16_t *p16) {
   my_dma_l4_to_l2_16k(0, p16);
-  /* printf("p16[%d] = 0x%04X\n", 22520, p16[22520]); */
   my_dma_l4_to_l2_16k(1, p16 + _16K);
   gal_fast_l2dma_async_memcpy_end(0);
   gal_fast_l2dma_async_memcpy_end(1);

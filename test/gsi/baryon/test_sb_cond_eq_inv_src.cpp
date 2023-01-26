@@ -43,31 +43,50 @@ RC_GTEST_FIXTURE_PROP(BaryonAPUCTest, sb_cond_eq_inv_src, ()) {
     for (size_t i = 0; i < num_vrs; i += 1) {
       baryon_foreach_rl_plat(plat, {
         switch (src_type) {
-        case BARYON_SRC_RL:      // fallthrough
-        case BARYON_SRC_NRL:     // fallthrough
-        case BARYON_SRC_ERL:     // fallthrough
-        case BARYON_SRC_WRL:     // fallthrough
-        case BARYON_SRC_SRL:     // fallthrough
         case BARYON_SRC_INV_RL:  // fallthrough
         case BARYON_SRC_INV_NRL: // fallthrough
         case BARYON_SRC_INV_ERL: // fallthrough
         case BARYON_SRC_INV_WRL: // fallthrough
-        case BARYON_SRC_INV_SRL: // fallthrough
-          (*expected[i])[section][plat] &= !(*(baryon_rl_t *)src)[section][plat];
+        case BARYON_SRC_INV_SRL: {
+          (*expected[i])[section][plat] &= (*(baryon_rl_t *)src)[section][plat];
           break;
-        case BARYON_SRC_GGL: // fallthrough
-        case BARYON_SRC_INV_GGL:
+        }
+        case BARYON_SRC_INV_GGL: {
           (*expected[i])[section][plat] &=
-            !(*(baryon_ggl_t *)src)[section / BARYON_NUM_GROUPS][plat];
+            (*(baryon_ggl_t *)src)[section / BARYON_NUM_GROUPS][plat];
           break;
-        case BARYON_SRC_GL: // fallthrough
-        case BARYON_SRC_INV_GL:
-          (*expected[i])[section][plat] &= !(*(baryon_gl_t *)src)[plat];
+        }
+        case BARYON_SRC_INV_GL: {
+          (*expected[i])[section][plat] &= (*(baryon_gl_t *)src)[plat];
           break;
-        case BARYON_SRC_RSP16: // fallthrough
-        case BARYON_SRC_INV_RSP16:
-          (*expected[i])[section][plat] &= !(*(baryon_rsp16_t *)src)[section][plat / 16];
+        }
+        case BARYON_SRC_INV_RSP16:{
+          (*expected[i])[section][plat] &=
+            (*(baryon_rsp16_t *)src)[section][plat / 16];
           break;
+        }
+        case BARYON_SRC_RL:  // fallthrough
+        case BARYON_SRC_NRL: // fallthrough
+        case BARYON_SRC_ERL: // fallthrough
+        case BARYON_SRC_WRL: // fallthrough
+        case BARYON_SRC_SRL: {
+          (*expected[i])[section][plat] |= (*(baryon_rl_t *)src)[section][plat];
+          break;
+        }
+        case BARYON_SRC_GGL: {
+          (*expected[i])[section][plat] |=
+              (*(baryon_ggl_t *)src)[section / BARYON_NUM_GROUPS][plat];
+          break;
+        }
+        case BARYON_SRC_GL: {
+          (*expected[i])[section][plat] |= (*(baryon_gl_t *)src)[plat];
+          break;
+        }
+        case BARYON_SRC_RSP16: {
+          (*expected[i])[section][plat] |=
+              (*(baryon_rsp16_t *)src)[section][plat / 16];
+          break;
+        }
         }
       });
     }

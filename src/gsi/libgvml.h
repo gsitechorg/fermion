@@ -112,12 +112,6 @@ enum gvml_vm_reg {
     GVML_VM_47  = 47,
 };
 
-extern baryon_apuc_t apuc;
-extern baryon_seu_layer_t seu_layer;
-
-void baryon_init(void);
-void baryon_exit(void);
-
 int gvml_apl_init(void);
 void gvml_init(void);
 void gvml_init_once(void);

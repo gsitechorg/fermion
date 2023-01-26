@@ -70,3 +70,11 @@ void gal_fast_l2dma_mem_to_l2_start(uint32_t apc_id,
 void *gal_mem_handle_to_apu_ptr(gal_mem_handle_t handle) {
     return (void*)handle;
 }
+
+void gal_init(void) {
+  // empty
+}
+
+void gal_exit(void) {
+  // empty
+}

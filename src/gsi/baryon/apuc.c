@@ -1318,10 +1318,20 @@ baryon_wordline_map_t * baryon_sb_cond_eq_src(baryon_apuc_t *apuc,
                                               size_t num_vrs,
                                               void *src,
                                               baryon_src_t src_type) {
-  return baryon_sb_op_eq_src(apuc, mask,
-                             vrs, num_vrs,
-                             baryon_left_or_right,
-                             src, src_type);
+  switch (src_type) {
+  case BARYON_SRC_RL:  // fallthrough
+  case BARYON_SRC_NRL: // fallthrough
+  case BARYON_SRC_ERL: // fallthrough
+  case BARYON_SRC_WRL: // fallthrough
+  case BARYON_SRC_SRL: // fallthrough
+  case BARYON_SRC_GGL: // fallthrough
+  case BARYON_SRC_GL:  // fallthrough
+  case BARYON_SRC_RSP16:
+    return baryon_sb_op_eq_src(apuc, mask, vrs, num_vrs, baryon_left_or_right,
+                               src, src_type);
+  default:
+    return baryon_sb_cond_eq_inv_src(apuc, mask, vrs, num_vrs, src, src_type);
+  }
 }
 
 baryon_wordline_map_t * baryon_sb_cond_eq_inv_src(baryon_apuc_t *apuc,
@@ -1330,10 +1340,20 @@ baryon_wordline_map_t * baryon_sb_cond_eq_inv_src(baryon_apuc_t *apuc,
                                                   size_t num_vrs,
                                                   void *src,
                                                   baryon_src_t src_type) {
-  return baryon_sb_op_eq_src(apuc, mask,
-                             vrs, num_vrs,
-                             baryon_left_and_inv_right,
-                             src, src_type);
+  switch (src_type) {
+  case BARYON_SRC_INV_RL:  // fallthrough
+  case BARYON_SRC_INV_NRL: // fallthrough
+  case BARYON_SRC_INV_ERL: // fallthrough
+  case BARYON_SRC_INV_WRL: // fallthrough
+  case BARYON_SRC_INV_SRL: // fallthrough
+  case BARYON_SRC_INV_GGL: // fallthrough
+  case BARYON_SRC_INV_GL:  // fallthrough
+  case BARYON_SRC_INV_RSP16:
+    return baryon_sb_op_eq_src(apuc, mask, vrs, num_vrs,
+                               baryon_left_and_right, src, src_type);
+  default:
+    return baryon_sb_cond_eq_src(apuc, mask, vrs, num_vrs, src, src_type);
+  }
 }
 
 void baryon_set_rl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask, bool bit) {
@@ -2780,9 +2800,9 @@ baryon_ggl_t *baryon_ggl_from_rl_and_l1(baryon_apuc_t *apuc, size_t mask,
 void baryon_rwinh_set_in_place(baryon_apuc_t *apuc, size_t mask) {
   apuc->rwinh_sects |= mask;
   baryon_foreach_masked_section(mask, section, {
-    baryon_foreach_vr_plat(plat, {
-      apuc->rwinh_filter[section][plat] = apuc->rl[section][plat];
-    });
+    memcpy(&apuc->rwinh_filter[section],
+           &apuc->rl[section],
+           BARYON_WORDLINE_SIZE);
   });
 }
 
@@ -2797,7 +2817,9 @@ size_t baryon_rwinh_set(baryon_apuc_t *apuc, size_t mask) {
 void baryon_rwinh_rst_in_place(baryon_apuc_t *apuc, size_t mask, bool has_read) {
   if (!has_read) {
     baryon_foreach_masked_section(mask, section, {
-      memcpy(&apuc->rl[section], &apuc->rwinh_filter[section], BARYON_WORDLINE_SIZE);
+      memcpy(&apuc->rl[section],
+             &apuc->rwinh_filter[section],
+             BARYON_WORDLINE_SIZE);
     });
   }
 

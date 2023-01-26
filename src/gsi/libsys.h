@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
+#include <gsi/libsys/assert.h>
+#include <gsi/libsys/log.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -16,6 +19,7 @@ typedef signed int gsi_prod_int_t;
 typedef gsi_prod_int_t gsi_prod_status_t;
 
 gsi_status_t gsi_libsys_init(const char *argv0, bool log_to_screen);
+void gsi_libsys_exit(void);
 
 int gsi_sim_destroy_simulator(void);
 

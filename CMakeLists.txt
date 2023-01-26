@@ -12,52 +12,63 @@ message("belex-aot: ${BELEX_AOT}")
 
 add_custom_command(
     OUTPUT
-        "${CMAKE_BINARY_DIR}/gensrc/gsi/baryon/gvml_fragments.c"
-        "${CMAKE_BINARY_DIR}/gensrc/gsi/baryon/gvml_fragments.h"
+        "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.c"
+        "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.h"
     COMMAND "${BELEX_AOT}"
         -O0
-        --source-file "${CMAKE_BINARY_DIR}/gensrc/gsi/baryon/gvml_fragments.c"
-        --header-file "${CMAKE_BINARY_DIR}/gensrc/gsi/baryon/gvml_fragments.h"
+        --source-file "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.c"
+        --header-file "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.h"
         --target baryon
         --no-uniquify-nyms
-        "${CMAKE_SOURCE_DIR}/src/gsi/baryon/fragments.py"
+        --explicit-frags-only
+        "${CMAKE_SOURCE_DIR}/src/gsi/fragments.py"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     DEPENDS
-        "${CMAKE_SOURCE_DIR}/src/gsi/baryon/fragments.py"
+        "${CMAKE_SOURCE_DIR}/src/gsi/fragments.py"
     VERBATIM
 )
 
-add_library(gsibaryon
+add_library(gsi-baryon-sys
     src/gsi/baryon/operations.c
     src/gsi/baryon/apuc.c
     src/gsi/baryon/seu_layer.c
-    "${CMAKE_BINARY_DIR}/gensrc/gsi/baryon/gvml_fragments.c"
+    src/gsi/common_api.c
     src/gsi/libapl.c
     src/gsi/libgal.c
-    src/gsi/libgvml.c
     src/gsi/libgdl.c
     src/gsi/libsys.c
 )
-target_include_directories(gsibaryon PUBLIC
+
+add_library(gsi-baryon-gvml
+  "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.c"
+  src/gsi/libgvml.c
+)
+
+target_include_directories(gsi-baryon-sys PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
   "${CMAKE_BINARY_DIR}/gensrc"
 )
 
-install(TARGETS gsibaryon
+target_include_directories(gsi-baryon-gvml PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/src"
+  "${CMAKE_BINARY_DIR}/gensrc"
+)
+
+install(TARGETS gsi-baryon-sys gsi-baryon-gvml
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
 )
+
 install(
     FILES ${HEADERS}
     DESTINATION include/gsi/
 )
+
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/gsi
         DESTINATION include
         FILES_MATCHING PATTERN "*.h"
 )
-
-
 
 message("Configuration results")
 message("---------------------")

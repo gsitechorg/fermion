@@ -1,7 +1,8 @@
 #include <gsi/baryon/apuc.h>
+#include <gsi/common_api.h>
+#include <gsi/gal-fast-funcs.h>
 #include <gsi/libgvml.h>
 #include <gsi/libgvml_memory.h>
-#include <gsi/gal-fast-funcs.h>
 
 #include <gtest/gtest.h>
 

@@ -23,12 +23,11 @@ pipelines:
           - make -j$(nproc)
           - make install
           - cd ../..
-          - pip install git+ssh://git@bitbucket.org/gsitech/belex.git@773e68e1b9c70e16ec51a253b34c83972154bc80#egg=belex
+          - pip install git+ssh://git@bitbucket.org/gsitech/belex.git@fb08bb6a6f5f2ae8ffbd4e550c217943e6cbce0e#egg=belex
           - pip install git+ssh://git@bitbucket.org/gsitech/belex-libs.git@3facd5241f2e8e12c3aa4afbd8d3e45751ccf63e#egg=belex-libs
           - git clone https://github.com/google/gtest-parallel.git
           - cd gtest-parallel
           - git checkout f4d65b555894b301699c7c3c52906f72ea052e83
           - ln -sv "$PWD/gtest-parallel" "$CONDA_PREFIX/bin/gtest-parallel"
           - cd ..
-          - DEBUG_MODE=true ./setup.sh --prefix ~/local --enable-tests --num-cores $(nproc)
-          - gtest-parallel --print_test_times ./build/test/test-baryon
+          - DEBUG_MODE=true ./setup.sh --test

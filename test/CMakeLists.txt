@@ -13,12 +13,16 @@ target_link_directories(test-baryon PUBLIC
 )
 
 target_link_libraries(test-baryon PUBLIC
-  gsibaryon
+  gsi-baryon-gvml
+  gsi-baryon-sys
   gtest
   rapidcheck
   yaml-cpp
   stdc++fs
   pthread
+  atomic
+  m
+  dl
 )
 
 add_subdirectory(gsi)
