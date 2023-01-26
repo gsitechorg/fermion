@@ -88,6 +88,12 @@ function parse-opts {
                 INSTALL_BARYON=true
                 shift
                 ;;
+            --*=*)
+                shift
+                LVALUE="${OPTION/=*}"
+                RVALUE="${OPTION:1+${#LVALUE}}"
+                set - "$LVALUE" "$RVALUE" "$@"
+                ;;
             -[a-z][a-z]*)
                 shift
                 # Expand short args in reverse, in case the right-most arg
