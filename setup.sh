@@ -24,6 +24,7 @@ BUILD_TYPE=Debug
 NUM_CORES=$(nproc)
 
 BASEDIR="$(dirname "$0")"
+BASEDIR="$(cd "$BASEDIR"; pwd)"
 BUILD_DIR="${BASEDIR}/build"
 SCRIPT_NAME="$(basename "$0")"
 
