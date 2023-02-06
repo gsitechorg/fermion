@@ -19,6 +19,7 @@ declare INSTALL_PREFIX
 declare INSTALL_BARYON
 declare ENABLE_TESTS
 declare RUN_TESTS
+declare GTEST_FILTER
 
 BUILD_TYPE=Debug
 NUM_CORES=$(nproc)
@@ -33,21 +34,30 @@ function print-help {
 Software emulator for the GSI APU and libraries like libs-gvml and sys-apu.
 
 Options:
-  -h|--help       Print this help text.
-  --prefix        Specify the installation prefix (default: /usr/local)
-  --test          Run tests after building them.
-  --install       Install Baryon after building it.
-  --enable-tests  Build the testing suite for Baryon.
-  --build-type    CMake build type (Debug, Release, etc., default: $BUILD_TYPE)
-  --num-cores     Number of CPU cores to build the library on (default: ${NUM_CORES}).
+  -h|--help                   Print this help text.
+  --prefix PATH               Specify the installation prefix
+                              (default: /usr/local)
+  --test                      Run tests after building them.
+  --install                   Install Baryon after building it.
+  --enable-tests              Build the testing suite for Baryon.
+  --build-type Debug|Release  CMake build type (Debug, Release, etc.,
+                              default: $BUILD_TYPE)
+  --num-cores INT             Number of CPU cores to build the library on
+                              (default: ${NUM_CORES}).
+  --filter PATTERN            Filters which tests to run.
 
 Usage:
-  $SCRIPT_NAME [--help] \
-      [--prefix /path/to/install/dir] \
-      [--no-tests]
+  $SCRIPT_NAME [--help] \\
+      [--prefix /path/to/install/dir] \\
+      [--test] \\
+      [--install] \\
+      [--enable-tests] \\
+      [--build-type BUILD_TYPE] \\
+      [--num-cores NUM_CORES] \\
+      [--filter GTEST_FILTER]
 
 Examples:
-  $SCRIPT_NAME --prefix baryon-inst --no-tests
+  $SCRIPT_NAME --prefix build/baryon-inst --enable-tests --install
 EOF
 
     return $EXIT_SUCCESS
@@ -85,6 +95,10 @@ function parse-opts {
                 RUN_TESTS=true
                 shift
                 ;;
+            --filter)
+                GTEST_FILTER="$2"
+                shift 2
+                ;;
             --install)
                 INSTALL_BARYON=true
                 shift
@@ -93,14 +107,14 @@ function parse-opts {
                 shift
                 LVALUE="${OPTION/=*}"
                 RVALUE="${OPTION:1+${#LVALUE}}"
-                set - "$LVALUE" "$RVALUE" "$@"
+                set -- "$LVALUE" "$RVALUE" "$@"
                 ;;
             -[a-z][a-z]*)
                 shift
                 # Expand short args in reverse, in case the right-most arg
                 # accepts a parameter.
                 for (( i = ${#OPTION} - 1; i > 0; i -= 1 )); do
-                    set - "-${OPTION:$i:1}" "$@"
+                    set -- "-${OPTION:$i:1}" "$@"
                 done
                 ;;
             *)
@@ -174,6 +188,7 @@ function test-baryon() {
     gtest-parallel \
         --workers="$NUM_CORES" \
         --print_test_times \
+        --gtest_filter "$GTEST_FILTER" \
         ./test/test-baryon
     RETURN_CODE=$?
 

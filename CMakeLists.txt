@@ -15,7 +15,6 @@ add_custom_command(
         "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.c"
         "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.h"
     COMMAND "${BELEX_AOT}"
-        -O0
         --source-file "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.c"
         --header-file "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.h"
         --target baryon
