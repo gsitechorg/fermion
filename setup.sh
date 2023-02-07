@@ -66,8 +66,10 @@ EOF
 function parse-opts {
     local OPTION
     local RETURN_CODE=$EXIT_SUCCESS
+    local LVALUE
+    local RVALUE
 
-    while (( $# > 0 )); do
+    while (( $# )); do
         OPTION="$1"
         case "$OPTION" in
             -h|--help)
