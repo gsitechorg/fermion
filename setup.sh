@@ -13,6 +13,7 @@ EXIT_CMAKE_FAILED=3
 EXIT_MAKE_FAILED=4
 EXIT_INSTALL_FAILED=5
 EXIT_TEST_FAILED=6
+EXIT_RMDIR_FAILED=7
 
 declare PRINT_HELP
 declare INSTALL_PREFIX
@@ -20,6 +21,7 @@ declare INSTALL_BARYON
 declare ENABLE_TESTS
 declare RUN_TESTS
 declare GTEST_FILTER
+declare CLEAN_BUILD
 
 BUILD_TYPE=Debug
 NUM_CORES=$(nproc)
@@ -45,6 +47,7 @@ Options:
   --num-cores INT             Number of CPU cores to build the library on
                               (default: ${NUM_CORES}).
   --filter PATTERN            Filters which tests to run.
+  --clean                     Delete $BUILD_DIR and rebuild everything.
 
 Usage:
   $SCRIPT_NAME [--help] \\
@@ -54,7 +57,8 @@ Usage:
       [--enable-tests] \\
       [--build-type BUILD_TYPE] \\
       [--num-cores NUM_CORES] \\
-      [--filter GTEST_FILTER]
+      [--filter GTEST_FILTER] \\
+      [--clean]
 
 Examples:
   $SCRIPT_NAME --prefix build/baryon-inst --enable-tests --install
@@ -103,6 +107,10 @@ function parse-opts {
                 ;;
             --install)
                 INSTALL_BARYON=true
+                shift
+                ;;
+            --clean)
+                CLEAN_BUILD=true
                 shift
                 ;;
             --*=*)
@@ -249,6 +257,17 @@ function main {
 
     if (( RETURN_CODE != EXIT_SUCCESS )); then
         return $RETURN_CODE
+    fi
+
+    if [ -n "$CLEAN_BUILD" ] && [ -d "$BUILD_DIR" ]; then
+        rm -rf "$BUILD_DIR"
+        RETURN_CODE=$?
+
+        if (( RETURN_CODE != EXIT_SUCCESS )); then
+            echo "Failed to delete $BUILD_DIR" 1>&2
+            echo "rm -rf \"$BUILD_DIR\" failed with status $RETURN_CODE" 1>&2
+            return $EXIT_RMDIR_FAILED
+        fi
     fi
 
     build-baryon

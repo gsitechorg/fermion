@@ -6,9 +6,6 @@ dependencies:
   - belex=1.0rc5
   - belex-libs=1.0rc5
   - rapidcheck=2023.01.13
-  - clang=15.0.7
-  - clangxx=15.0.7
-  - libcxx=14.0.6
   - cmake=3.25.2
   - gtest=1.12.1
   - gtest-parallel=2022.06.21
