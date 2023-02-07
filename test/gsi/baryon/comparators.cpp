@@ -139,38 +139,27 @@ bool baryon_rsp2k_eq_rsp256(baryon_rsp2k_t *lhs, baryon_rsp256_t *rhs) {
 }
 
 bool baryon_rsp2k_eq_rsp32k(baryon_rsp2k_t *lhs, baryon_rsp32k_t *rhs) {
-  baryon_foreach_rsp32k_plat(rsp32k_plat, {
-    size_t lower_rsp2k = rsp32k_plat * 16;
-    size_t upper_rsp2k = lower_rsp2k + 16;
+  baryon_foreach_half_bank(half_bank, {
+    bool rhs_value = (*rhs)[half_bank];
     baryon_foreach_rsp2k_section(section, {
-      bool rhs_value = (*rhs)[section][rsp32k_plat];
-      baryon_foreach_range(rsp2k_plat, lower_rsp2k, upper_rsp2k, {
-        bool lhs_value = (*lhs)[section][rsp2k_plat];
-        if (lhs_value != rhs_value) {
-          return false;
-        }
-      });
+      bool lhs_value = (*lhs)[section][half_bank];
+      if (lhs_value != rhs_value) {
+        return false;
+      }
     });
   });
   return true;
 }
 
 bool baryon_rsp32k_eq_rsp2k(baryon_rsp32k_t *lhs, baryon_rsp2k_t *rhs) {
-  baryon_foreach_rsp32k_plat(rsp32k_plat, {
-    size_t lower_rsp2k = rsp32k_plat * 16;
-    size_t upper_rsp2k = lower_rsp2k + 16;
+  baryon_foreach_half_bank(half_bank, {
+    bool any = false;
     baryon_foreach_rsp2k_section(section, {
-      bool any = false;
-      baryon_foreach_range(rsp2k_plat, lower_rsp2k, upper_rsp2k, {
-        if ((*rhs)[section][rsp2k_plat]) {
-          any = true;
-          break;
-        }
-      });
-      if ((*lhs)[section][rsp32k_plat] != any) {
-        return false;
-      }
+      any |= (*rhs)[section][half_bank];
     });
+    if ((*lhs)[half_bank] != any) {
+      return false;
+    }
   });
   return true;
 }

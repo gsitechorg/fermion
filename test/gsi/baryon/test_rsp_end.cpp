@@ -27,8 +27,8 @@ RC_GTEST_FIXTURE_PROP(BaryonAPUCTest, rsp_end, ()) {
   baryon_foreach_rsp2k_section_plat(section, plat, {
     RC_ASSERT(!apuc->rsp2k[section][plat]);
   });
-  baryon_foreach_rsp32k_section_plat(section, plat, {
-    RC_ASSERT(!apuc->rsp32k[section][plat]);
+  baryon_foreach_rsp32k_section(section, {
+    RC_ASSERT(!apuc->rsp32k[section]);
   });
 
   baryon_randomize_rsp16(&apuc->rsp16, rsp16_seed);
@@ -51,7 +51,7 @@ RC_GTEST_FIXTURE_PROP(BaryonAPUCTest, rsp_end, ()) {
   baryon_foreach_rsp2k_section_plat(section, plat, {
     RC_ASSERT(!apuc->rsp2k[section][plat]);
   });
-  baryon_foreach_rsp32k_section_plat(section, plat, {
-    RC_ASSERT(!apuc->rsp32k[section][plat]);
+  baryon_foreach_rsp32k_section(section, {
+    RC_ASSERT(!apuc->rsp32k[section]);
   });
 }

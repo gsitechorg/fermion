@@ -51,6 +51,7 @@ target_sources(test-baryon PUBLIC
   test_rsp2k_from_rsp32k.cpp
   test_rsp32k_from_rsp2k.cpp
   test_rsp_end.cpp
+  test_rsp_fifo.cpp
   test_rwinh.cpp
   test_sb_cond_eq_inv_src.cpp
   test_sb_cond_eq_src.cpp

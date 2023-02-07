@@ -10,6 +10,7 @@ extern "C" {
 #include <stdbool.h>
 
 #include "constants.h"
+#include "fifo.h"
 
 #define BARYON_FOREACH_RANGE_3(var, lower, upper, step_size, block) \
   for (size_t var = lower; var < upper; var += step_size) {         \
@@ -154,14 +155,6 @@ extern "C" {
 #define baryon_foreach_rsp32k_section(section, block) \
   baryon_foreach_range(section, BARYON_NUM_SECTIONS, block)
 
-#define baryon_foreach_rsp32k_plat(plat, block) \
-  baryon_foreach_range(plat, BARYON_NUM_RSP32K_PLATS, block)
-
-#define baryon_foreach_rsp32k_section_plat(section, plat, block) \
-  baryon_foreach_rsp32k_section(section, {                       \
-    baryon_foreach_rsp32k_plat(plat, block);                     \
-  })
-
 #define baryon_foreach_half_bank(half_bank, block) \
   baryon_foreach_range(half_bank, BARYON_NUM_HALF_BANKS_PER_APUC, block)
 
@@ -227,13 +220,6 @@ void baryon_bank_group_row(size_t l1_addr, size_t *bank, size_t *group,
     });                                                                        \
   }
 
-#define baryon_rsp_from_rsp(lhs, rhs, left_width, right_width)                 \
-  if (left_width < right_width) {                                              \
-    baryon_rsp_from_contraction(lhs, rhs, left_width, right_width);            \
-  } else {                                                                     \
-    baryon_rsp_from_expansion(lhs, rhs, left_width, right_width);              \
-  }
-
 typedef bool baryon_vr_t[BARYON_NUM_SECTIONS][BARYON_NUM_PLATS_PER_APUC];
 typedef baryon_vr_t baryon_rl_t;
 typedef baryon_vr_t baryon_brsp16_t;
@@ -245,7 +231,7 @@ typedef bool baryon_ggl_t[BARYON_NUM_GROUPS][BARYON_NUM_PLATS_PER_APUC];
 typedef bool baryon_rsp16_t[BARYON_NUM_SECTIONS][BARYON_NUM_RSP16_PLATS];
 typedef bool baryon_rsp256_t[BARYON_NUM_SECTIONS][BARYON_NUM_RSP256_PLATS];
 typedef bool baryon_rsp2k_t[BARYON_NUM_SECTIONS][BARYON_NUM_RSP2K_PLATS];
-typedef bool baryon_rsp32k_t[BARYON_NUM_SECTIONS][BARYON_NUM_RSP32K_PLATS];
+typedef bool baryon_rsp32k_t[BARYON_NUM_SECTIONS];
 typedef bool baryon_l1_t[BARYON_NUM_GROUPS][BARYON_NUM_PLATS_PER_APUC];
 typedef bool baryon_l2_t[BARYON_NUM_L2_PLATS];
 typedef bool baryon_lgl_t[BARYON_NUM_LGL_PLATS];
@@ -270,7 +256,7 @@ typedef bool baryon_rsp16_section_t[BARYON_NUM_RSP16_PLATS];
 #define BARYON_RSP2K_SIZE \
   (BARYON_NUM_SECTIONS * BARYON_NUM_RSP2K_PLATS * sizeof(bool))
 #define BARYON_RSP32K_SIZE \
-  (BARYON_NUM_SECTIONS * BARYON_NUM_RSP32K_PLATS * sizeof(bool))
+  (BARYON_NUM_SECTIONS * sizeof(bool))
 #define BARYON_L1_SIZE \
   (BARYON_NUM_GROUPS * BARYON_NUM_PLATS_PER_APUC * sizeof(bool))
 #define BARYON_L2_SIZE \
@@ -278,7 +264,26 @@ typedef bool baryon_rsp16_section_t[BARYON_NUM_RSP16_PLATS];
 #define BARYON_LGL_SIZE \
   (BARYON_NUM_LGL_PLATS * sizeof(bool))
 
+typedef enum {
+  BARYON_RSP_MODE_IDLE,
+  BARYON_RSP_MODE_RSP16_READ,   // invalid APUC RSP operation
+  BARYON_RSP_MODE_RSP256_READ,  // invalid APUC RSP operation
+  BARYON_RSP_MODE_RSP2K_READ,
+  BARYON_RSP_MODE_RSP32K_READ,
+  BARYON_RSP_MODE_RSP16_WRITE,
+  BARYON_RSP_MODE_RSP256_WRITE,
+  BARYON_RSP_MODE_RSP2K_WRITE,
+  BARYON_RSP_MODE_RSP32K_WRITE,
+  BARYON_NUM_RSP_MODES
+} baryon_rsp_mode_t;
+
+extern const char *baryon_rsp_mode_name[9];
+
 typedef struct baryon_apuc_t {
+  baryon_rsp32k_fifo_t *rsp32k_fifo;
+  baryon_rsp2k_fifo_t *rsp2k_fifo;
+  baryon_rsp_mode_t rsp_mode;
+
   baryon_vr_t vrs[BARYON_NUM_SBS];
   baryon_rl_t rl;
   baryon_gl_t gl;
@@ -316,10 +321,13 @@ typedef struct baryon_wordline_map_t {
 typedef enum {
   BARYON_L1_SRC_GGL,
   BARYON_L1_SRC_LGL,
-} baryon_l1_patch_src;
+  BARYON_NUM_L1_SRCS
+} baryon_l1_patch_src_t;
+
+extern const char *baryon_l1_patch_src_name[2];
 
 typedef struct baryon_l1_patch_t {
-  baryon_l1_patch_src src;
+  baryon_l1_patch_src_t src;
   size_t l1_addr;
   union {
     baryon_ggl_t *ggl_patch;
@@ -374,7 +382,11 @@ typedef enum {
   BARYON_SRC_INV_GL,
   BARYON_SRC_INV_GGL,
   BARYON_SRC_INV_RSP16,
+
+  BARYON_NUM_SRCS
 } baryon_src_t;
+
+extern const char *baryon_src_name[16];
 
 typedef baryon_wordline_t *(*baryon_unary_op_t)(baryon_wordline_t *nth1);
 typedef baryon_wordline_t *(*baryon_binary_op_t)(baryon_wordline_t *nth1,
@@ -382,10 +394,6 @@ typedef baryon_wordline_t *(*baryon_binary_op_t)(baryon_wordline_t *nth1,
 typedef baryon_wordline_t *(*baryon_ternary_op_t)(baryon_wordline_t *nth1,
                                                   baryon_wordline_t *nth2,
                                                   baryon_wordline_t *nth3);
-
-const char *baryon_l1_patch_src_name(baryon_l1_patch_src l1_patch_src_type);
-
-const char *baryon_src_name(baryon_src_t src_type);
 
 void baryon_plats_for_bank(size_t bank,
                            size_t *lower_plat_apc_0,
@@ -431,7 +439,9 @@ void baryon_init_l1(baryon_l1_t *l1, bool value);
 void baryon_init_l2(baryon_l2_t *l2, bool value);
 void baryon_init_lgl(baryon_lgl_t *lgl, bool value);
 
-void baryon_init_apuc(baryon_apuc_t *apuc);
+void baryon_init_apuc(baryon_apuc_t *apuc,
+                      baryon_rsp32k_fifo_t *rsp32k_fifo,
+                      baryon_rsp2k_fifo_t *rsp2k_fifo);
 
 void baryon_free_apuc(baryon_apuc_t *apuc);
 void baryon_free_vr(baryon_vr_t *vr);

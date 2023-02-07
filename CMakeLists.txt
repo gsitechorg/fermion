@@ -29,6 +29,7 @@ add_custom_command(
 
 add_library(gsi-baryon-sys
     src/gsi/baryon/operations.c
+    src/gsi/baryon/fifo.c
     src/gsi/baryon/apuc.c
     src/gsi/baryon/seu_layer.c
     src/gsi/common_api.c

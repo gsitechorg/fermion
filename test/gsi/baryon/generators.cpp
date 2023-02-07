@@ -159,8 +159,8 @@ void baryon_randomize_rsp2k(baryon_rsp2k_t *rsp2k, uint32_t seed) {
 
 void baryon_randomize_rsp32k(baryon_rsp32k_t *rsp32k, uint32_t seed) {
   srand(seed);
-  baryon_foreach_rsp32k_section_plat(section, plat, {
-    (*rsp32k)[section][plat] = baryon_gen_bool();
+  baryon_foreach_rsp32k_section(section, {
+    (*rsp32k)[section] = baryon_gen_bool();
   });
 }
 

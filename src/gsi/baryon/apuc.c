@@ -1,53 +1,48 @@
 #include <string.h>
 
 #include "apuc.h"
+#include "constants.h"
+#include "fifo.h"
 #include "operations.h"
 
-const char *baryon_l1_patch_src_name(baryon_l1_patch_src l1_patch_src_type) {
-  switch (l1_patch_src_type) {
-  case BARYON_L1_SRC_GGL:
-    return "GGL";
-  case BARYON_L1_SRC_LGL:
-    return "LGL";
-  }
-}
+const char *baryon_rsp_mode_name[9] = {
+  "BARYON_RSP_MODE_IDLE",
+  "BARYON_RSP_MODE_RSP16_READ",
+  "BARYON_RSP_MODE_RSP256_READ",
+  "BARYON_RSP_MODE_RSP2K_READ",
+  "BARYON_RSP_MODE_RSP32K_READ",
+  "BARYON_RSP_MODE_RSP16_WRITE",
+  "BARYON_RSP_MODE_RSP256_WRITE",
+  "BARYON_RSP_MODE_RSP2K_WRITE",
+  "BARYON_RSP_MODE_RSP32K_WRITE"
+};
 
-const char *baryon_src_name(baryon_src_t src_type) {
-  switch (src_type) {
-  case BARYON_SRC_RL:
-    return "RL";
-  case BARYON_SRC_NRL:
-    return "NRL";
-  case BARYON_SRC_ERL:
-    return "ERL";
-  case BARYON_SRC_WRL:
-    return "WRL";
-  case BARYON_SRC_SRL:
-    return "SRL";
-  case BARYON_SRC_INV_RL:
-    return "INV_RL";
-  case BARYON_SRC_INV_NRL:
-    return "INV_NRL";
-  case BARYON_SRC_INV_ERL:
-    return "INV_ERL";
-  case BARYON_SRC_INV_WRL:
-    return "INV_WRL";
-  case BARYON_SRC_INV_SRL:
-    return "INV_SRL";
-  case BARYON_SRC_GGL:
-    return "GGL";
-  case BARYON_SRC_INV_GGL:
-    return "INV_GGL";
-  case BARYON_SRC_GL:
-    return "GL";
-  case BARYON_SRC_INV_GL:
-    return "INV_GL";
-  case BARYON_SRC_RSP16:
-    return "RSP16";
-  case BARYON_SRC_INV_RSP16:
-    return "INV_RSP16";
-  }
-}
+const char *baryon_l1_patch_src_name[2] = {
+  "BARYON_L1_SRC_GGL",
+  "BARYON_L1_SRC_LGL"
+};
+
+const char *baryon_src_name[16] = {
+  "BARYON_SRC_RL",
+  "BARYON_SRC_NRL",
+  "BARYON_SRC_ERL",
+  "BARYON_SRC_WRL",
+  "BARYON_SRC_SRL",
+
+  "BARYON_SRC_GL",
+  "BARYON_SRC_GGL",
+  "BARYON_SRC_RSP16",
+
+  "BARYON_SRC_INV_RL",
+  "BARYON_SRC_INV_NRL",
+  "BARYON_SRC_INV_ERL",
+  "BARYON_SRC_INV_WRL",
+  "BARYON_SRC_INV_SRL",
+
+  "BARYON_SRC_INV_GL",
+  "BARYON_SRC_INV_GGL",
+  "BARYON_SRC_INV_RSP16"
+};
 
 void baryon_plats_for_bank(size_t bank, size_t *lower_plat_apc_0,
                            size_t *upper_plat_apc_0, size_t *lower_plat_apc_1,
@@ -214,7 +209,7 @@ void baryon_patch_noop(baryon_apuc_t *apuc, void *patch) {
 }
 
 void baryon_patch_rsp_end(baryon_apuc_t *apuc, void *patch) {
-  // nothing to do, for now
+  baryon_rsp_end_in_place(apuc);
 }
 
 void baryon_patch_rsp_start_ret(baryon_apuc_t *apuc, void *patch) {
@@ -278,8 +273,13 @@ void baryon_init_lgl(baryon_lgl_t *lgl, bool value) {
   memset(lgl, value, BARYON_LGL_SIZE);
 }
 
-void baryon_init_apuc(baryon_apuc_t *apuc) {
+void baryon_init_apuc(baryon_apuc_t *apuc, baryon_rsp32k_fifo_t *rsp32k_fifo,
+                      baryon_rsp2k_fifo_t *rsp2k_fifo) {
   apuc->in_place = true;
+
+  apuc->rsp32k_fifo = rsp32k_fifo;
+  apuc->rsp2k_fifo = rsp2k_fifo;
+  apuc->rsp_mode = BARYON_RSP_MODE_IDLE;
 
   baryon_init_vrs(&apuc->vrs, false);
 
@@ -589,9 +589,8 @@ void baryon_bank_group_row(size_t l1_addr, size_t *bank, size_t *group,
 void baryon_rsp16_from_rsp256_in_place(baryon_apuc_t *apuc) {
   baryon_rsp16_t *rsp_left = &apuc->rsp16;
   baryon_rsp256_t *rsp_right = &apuc->rsp256;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP16_PLATS,
-                      BARYON_NUM_RSP256_PLATS);
+  baryon_rsp_from_expansion(rsp_left, rsp_right, BARYON_NUM_RSP16_PLATS,
+                            BARYON_NUM_RSP256_PLATS);
 }
 
 baryon_rsp16_t *baryon_rsp16_from_rsp256(baryon_apuc_t *apuc) {
@@ -602,9 +601,8 @@ baryon_rsp16_t *baryon_rsp16_from_rsp256(baryon_apuc_t *apuc) {
 
   baryon_rsp16_t *rsp_left = malloc(sizeof(baryon_rsp16_t));
   baryon_rsp256_t *rsp_right = &apuc->rsp256;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP16_PLATS,
-                      BARYON_NUM_RSP256_PLATS);
+  baryon_rsp_from_expansion(rsp_left, rsp_right, BARYON_NUM_RSP16_PLATS,
+                            BARYON_NUM_RSP256_PLATS);
 
   return rsp_left;
 }
@@ -612,12 +610,13 @@ baryon_rsp16_t *baryon_rsp16_from_rsp256(baryon_apuc_t *apuc) {
 void baryon_rsp256_from_rsp16_in_place(baryon_apuc_t *apuc) {
   baryon_rsp256_t *rsp_left = &apuc->rsp256;
   baryon_rsp16_t *rsp_right = &apuc->rsp16;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP256_PLATS,
-                      BARYON_NUM_RSP16_PLATS);
+  baryon_rsp_from_contraction(rsp_left, rsp_right, BARYON_NUM_RSP256_PLATS,
+                              BARYON_NUM_RSP16_PLATS);
 }
 
 baryon_rsp256_t *baryon_rsp256_from_rsp16(baryon_apuc_t *apuc) {
+  apuc->rsp_mode = BARYON_RSP_MODE_RSP256_READ;
+
   if (apuc->in_place) {
     baryon_rsp256_from_rsp16_in_place(apuc);
     return NULL;
@@ -625,9 +624,8 @@ baryon_rsp256_t *baryon_rsp256_from_rsp16(baryon_apuc_t *apuc) {
 
   baryon_rsp256_t *rsp_left = malloc(sizeof(baryon_rsp256_t));
   baryon_rsp16_t *rsp_right = &apuc->rsp16;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP256_PLATS,
-                      BARYON_NUM_RSP16_PLATS);
+  baryon_rsp_from_contraction(rsp_left, rsp_right, BARYON_NUM_RSP256_PLATS,
+                              BARYON_NUM_RSP16_PLATS);
 
   return rsp_left;
 }
@@ -635,9 +633,8 @@ baryon_rsp256_t *baryon_rsp256_from_rsp16(baryon_apuc_t *apuc) {
 void baryon_rsp256_from_rsp2k_in_place(baryon_apuc_t *apuc) {
   baryon_rsp256_t *rsp_left = &apuc->rsp256;
   baryon_rsp2k_t *rsp_right = &apuc->rsp2k;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP256_PLATS,
-                      BARYON_NUM_RSP2K_PLATS);
+  baryon_rsp_from_expansion(rsp_left, rsp_right, BARYON_NUM_RSP256_PLATS,
+                            BARYON_NUM_RSP2K_PLATS);
 }
 
 baryon_rsp256_t *baryon_rsp256_from_rsp2k(baryon_apuc_t *apuc) {
@@ -648,9 +645,8 @@ baryon_rsp256_t *baryon_rsp256_from_rsp2k(baryon_apuc_t *apuc) {
 
   baryon_rsp256_t *rsp_left = malloc(sizeof(baryon_rsp256_t));
   baryon_rsp2k_t *rsp_right = &apuc->rsp2k;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP256_PLATS,
-                      BARYON_NUM_RSP2K_PLATS);
+  baryon_rsp_from_expansion(rsp_left, rsp_right, BARYON_NUM_RSP256_PLATS,
+                            BARYON_NUM_RSP2K_PLATS);
 
   return rsp_left;
 }
@@ -658,12 +654,13 @@ baryon_rsp256_t *baryon_rsp256_from_rsp2k(baryon_apuc_t *apuc) {
 void baryon_rsp2k_from_rsp256_in_place(baryon_apuc_t *apuc) {
   baryon_rsp2k_t *rsp_left = &apuc->rsp2k;
   baryon_rsp256_t *rsp_right = &apuc->rsp256;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP2K_PLATS,
-                      BARYON_NUM_RSP256_PLATS);
+  baryon_rsp_from_contraction(rsp_left, rsp_right, BARYON_NUM_RSP2K_PLATS,
+                              BARYON_NUM_RSP256_PLATS);
 }
 
 baryon_rsp2k_t *baryon_rsp2k_from_rsp256(baryon_apuc_t *apuc) {
+  apuc->rsp_mode = BARYON_RSP_MODE_RSP2K_READ;
+
   if (apuc->in_place) {
     baryon_rsp2k_from_rsp256_in_place(apuc);
     return NULL;
@@ -671,19 +668,19 @@ baryon_rsp2k_t *baryon_rsp2k_from_rsp256(baryon_apuc_t *apuc) {
 
   baryon_rsp2k_t *rsp_left = malloc(sizeof(baryon_rsp2k_t));
   baryon_rsp256_t *rsp_right = &apuc->rsp256;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP2K_PLATS,
-                      BARYON_NUM_RSP256_PLATS);
+  baryon_rsp_from_contraction(rsp_left, rsp_right, BARYON_NUM_RSP2K_PLATS,
+                              BARYON_NUM_RSP256_PLATS);
 
   return rsp_left;
 }
 
 void baryon_rsp2k_from_rsp32k_in_place(baryon_apuc_t *apuc) {
-  baryon_rsp2k_t *rsp_left = &apuc->rsp2k;
-  baryon_rsp32k_t *rsp_right = &apuc->rsp32k;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP2K_PLATS,
-                      BARYON_NUM_RSP32K_PLATS);
+  baryon_foreach_half_bank(half_bank, {
+    bool value = apuc->rsp32k[half_bank];
+    baryon_foreach_rsp2k_section(section, {
+      apuc->rsp2k[section][half_bank] = value;
+    });
+  });
 }
 
 baryon_rsp2k_t *baryon_rsp2k_from_rsp32k(baryon_apuc_t *apuc) {
@@ -692,36 +689,46 @@ baryon_rsp2k_t *baryon_rsp2k_from_rsp32k(baryon_apuc_t *apuc) {
     return NULL;
   }
 
-  baryon_rsp2k_t *rsp_left = malloc(sizeof(baryon_rsp2k_t));
-  baryon_rsp32k_t *rsp_right = &apuc->rsp32k;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP2K_PLATS,
-                      BARYON_NUM_RSP32K_PLATS);
+  baryon_rsp2k_t *rsp2k = malloc(sizeof(baryon_rsp2k_t));
+  baryon_rsp32k_t *rsp32k = &apuc->rsp32k;
 
-  return rsp_left;
+  baryon_foreach_half_bank(half_bank, {
+    bool value = (*rsp32k)[half_bank];
+    baryon_foreach_rsp2k_section(section, {
+      (*rsp2k)[section][half_bank] = value;
+    });
+  });
+
+  return rsp2k;
 }
 
 void baryon_rsp32k_from_rsp2k_in_place(baryon_apuc_t *apuc) {
-  baryon_rsp32k_t *rsp_left = &apuc->rsp32k;
-  baryon_rsp2k_t *rsp_right = &apuc->rsp2k;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP32K_PLATS,
-                      BARYON_NUM_RSP2K_PLATS);
+  baryon_foreach_half_bank(half_bank, {
+    apuc->rsp32k[half_bank] = false;
+    baryon_foreach_rsp2k_section(section, {
+      apuc->rsp32k[half_bank] |= apuc->rsp2k[section][half_bank];
+    });
+  });
 }
 
 baryon_rsp32k_t *baryon_rsp32k_from_rsp2k(baryon_apuc_t *apuc) {
+  apuc->rsp_mode = BARYON_RSP_MODE_RSP32K_READ;
+
   if (apuc->in_place) {
     baryon_rsp32k_from_rsp2k_in_place(apuc);
     return NULL;
   }
 
-  baryon_rsp32k_t *rsp_left = malloc(sizeof(baryon_rsp32k_t));
-  baryon_rsp2k_t *rsp_right = &apuc->rsp2k;
-  baryon_rsp_from_rsp(rsp_left, rsp_right,
-                      BARYON_NUM_RSP32K_PLATS,
-                      BARYON_NUM_RSP2K_PLATS);
+  baryon_rsp32k_t *rsp32k = malloc(sizeof(baryon_rsp32k_t));
 
-  return rsp_left;
+  baryon_foreach_half_bank(half_bank, {
+    (*rsp32k)[half_bank] = false;
+    baryon_foreach_rsp2k_section(section, {
+      (*rsp32k)[half_bank] |= apuc->rsp2k[section][half_bank];
+    });
+  });
+
+  return rsp32k;
 }
 
 void baryon_noop_in_place(baryon_apuc_t *apuc) {
@@ -747,6 +754,29 @@ void *baryon_fsel_noop(baryon_apuc_t *apuc) {
 }
 
 void baryon_rsp_end_in_place(baryon_apuc_t *apuc) {
+  switch (apuc->rsp_mode) {
+  case BARYON_RSP_MODE_RSP2K_READ: {
+    uint16_t rsp2k[BARYON_NUM_HALF_BANKS_PER_APUC];
+    memset(rsp2k, 0x0000, BARYON_RSP2K_FIFO_SIZE);
+    baryon_foreach_half_bank(half_bank, {
+      baryon_foreach_rsp2k_section(section, {
+        rsp2k[half_bank] |= apuc->rsp2k[section][half_bank] << section;
+      });
+    });
+    baryon_rsp2k_fifo_enqueue(apuc->rsp2k_fifo, rsp2k);
+    break;
+  }
+  case BARYON_RSP_MODE_RSP32K_READ: {
+    uint16_t rsp32k = 0x0000;
+    baryon_foreach_rsp32k_section(section, {
+      rsp32k |= apuc->rsp32k[section] << section;
+    });
+    baryon_rsp32k_fifo_enqueue(apuc->rsp32k_fifo, rsp32k);
+    break;
+  }
+  }
+
+  apuc->rsp_mode = BARYON_RSP_MODE_IDLE;
   baryon_init_rsp16(&apuc->rsp16, false);
   baryon_init_rsp256(&apuc->rsp256, false);
   baryon_init_rsp2k(&apuc->rsp2k, false);
@@ -757,6 +787,7 @@ baryon_rsp_patches_t *baryon_rsp_end(baryon_apuc_t *apuc) {
   if (apuc->in_place) {
     baryon_rsp_end_in_place(apuc);
   }
+
   return NULL;
 }
 
@@ -765,9 +796,29 @@ void baryon_rsp_start_ret_in_place(baryon_apuc_t *apuc) {
 }
 
 void *baryon_rsp_start_ret(baryon_apuc_t *apuc) {
+  switch (apuc->rsp_mode) {
+  case BARYON_RSP_MODE_RSP16_READ: {
+    apuc->rsp_mode = BARYON_RSP_MODE_RSP16_WRITE;
+    break;
+  }
+  case BARYON_RSP_MODE_RSP256_READ: {
+    apuc->rsp_mode = BARYON_RSP_MODE_RSP256_WRITE;
+    break;
+  }
+  case BARYON_RSP_MODE_RSP2K_READ: {
+    apuc->rsp_mode = BARYON_RSP_MODE_RSP2K_WRITE;
+    break;
+  }
+  case BARYON_RSP_MODE_RSP32K_READ: {
+    apuc->rsp_mode = BARYON_RSP_MODE_RSP32K_WRITE;
+    break;
+  }
+  }
+
   if (apuc->in_place) {
     baryon_rsp_start_ret_in_place(apuc);
   }
+
   return NULL;
 }
 
@@ -2567,6 +2618,8 @@ void baryon_rsp16_from_rl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask) {
 
 baryon_rsp16_section_map_t *baryon_rsp16_from_rl(baryon_apuc_t *apuc,
                                                  baryon_sm_t mask) {
+  apuc->rsp_mode = BARYON_RSP_MODE_RSP16_READ;
+
   if (apuc->in_place) {
     baryon_rsp16_from_rl_in_place(apuc, mask);
     return NULL;
