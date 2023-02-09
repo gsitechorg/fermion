@@ -1,5 +1,5 @@
-#ifndef LEPTON_GSI_GAL_FAST_FUNCS_H
-#define LEPTON_GSI_GAL_FAST_FUNCS_H
+#ifndef BARYON_GSI_GAL_FAST_FUNCS_H
+#define BARYON_GSI_GAL_FAST_FUNCS_H
 
 #include "libgal.h"
 
@@ -26,9 +26,38 @@ void gal_fast_l2dma_mem_to_l2_start(uint32_t apc_id,
     struct gal_fast_l2dma_l4_l2_transaction *transactions,
     enum gal_l2dma_cmd_attr l2_ready_attr);
 
+static inline __attribute__((always_inline))
+bool gal_fast_l2dma_sync(gal_l2dma_hndl_t *ioxs, uint32_t apc_id, bool do_blocking)
+{
+    return true;
+}
+
+static inline __attribute__((always_inline))
+void gal_fast_l2dma_async_memcpy_init(uint32_t apc_id)
+{
+    return;
+}
+
+static inline __attribute__((always_inline))
+int gal_fast_cache_dcache_invalidate_mlines(uint32_t start_addr, uint32_t size)
+{
+    return 0;
+}
+
+static inline __attribute__((always_inline))
+void gal_fast_sync_many_blocking(gal_l2dma_hndl_t **ioxs, int count)
+{
+    return;
+}
+
+static inline __attribute__((always_inline))
+int gal_fast_cache_dcache_flush_mlines(uint32_t start_addr, uint32_t size)
+{
+    return 0;
+}
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // LEPTON_GSI_GAL_FAST_FUNCS_H
+#endif // BARYON_GSI_GAL_FAST_FUNCS_H

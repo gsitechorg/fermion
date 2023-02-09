@@ -13,15 +13,22 @@ EXIT_CMAKE_FAILED=3
 EXIT_MAKE_FAILED=4
 EXIT_INSTALL_FAILED=5
 EXIT_TEST_FAILED=6
+EXIT_RMDIR_FAILED=7
 
 declare PRINT_HELP
 declare INSTALL_PREFIX
-declare INSTALL_LEPTON
+declare INSTALL_BARYON
 declare ENABLE_TESTS
+declare RUN_TESTS
+declare GTEST_FILTER
+declare CLEAN_BUILD
 
 BUILD_TYPE=Debug
-NUM_CORES=1
+NUM_CORES=$(nproc)
 
+BASEDIR="$(dirname "$0")"
+BASEDIR="$(cd "$BASEDIR"; pwd)"
+BUILD_DIR="${BASEDIR}/build"
 SCRIPT_NAME="$(basename "$0")"
 
 function print-help {
@@ -29,20 +36,32 @@ function print-help {
 Software emulator for the GSI APU and libraries like libs-gvml and sys-apu.
 
 Options:
-  -h|--help       Print this help text.
-  --prefix        Specify the installation prefix (default: /usr/local)
-  --install       Install Lepton after building it.
-  --enable-tests  Build the testing suite for Lepton.
-  --build-type    CMake build type (Debug, Release, etc., default: $BUILD_TYPE)
-  --num-cores     Number of CPU cores to build the library on.
+  -h|--help                   Print this help text.
+  --prefix PATH               Specify the installation prefix
+                              (default: /usr/local)
+  --test                      Run tests after building them.
+  --install                   Install Baryon after building it.
+  --enable-tests              Build the testing suite for Baryon.
+  --build-type Debug|Release  CMake build type (Debug, Release, etc.,
+                              default: $BUILD_TYPE)
+  --num-cores INT             Number of CPU cores to build the library on
+                              (default: ${NUM_CORES}).
+  --filter PATTERN            Filters which tests to run.
+  --clean                     Delete $BUILD_DIR and rebuild everything.
 
 Usage:
-  $SCRIPT_NAME [--help] \
-      [--prefix /path/to/install/dir] \
-      [--no-tests]
+  $SCRIPT_NAME [--help] \\
+      [--prefix /path/to/install/dir] \\
+      [--test] \\
+      [--install] \\
+      [--enable-tests] \\
+      [--build-type BUILD_TYPE] \\
+      [--num-cores NUM_CORES] \\
+      [--filter GTEST_FILTER] \\
+      [--clean]
 
 Examples:
-  $SCRIPT_NAME --prefix lepton-inst --no-tests
+  $SCRIPT_NAME --prefix build/baryon-inst --enable-tests --install
 EOF
 
     return $EXIT_SUCCESS
@@ -51,8 +70,10 @@ EOF
 function parse-opts {
     local OPTION
     local RETURN_CODE=$EXIT_SUCCESS
+    local LVALUE
+    local RVALUE
 
-    while (( $# > 0 )); do
+    while (( $# )); do
         OPTION="$1"
         case "$OPTION" in
             -h|--help)
@@ -63,14 +84,6 @@ function parse-opts {
                 INSTALL_PREFIX="$2"
                 shift 2
                 ;;
-            --install)
-                INSTALL_LEPTON=true
-                shift
-                ;;
-            --enable-tests)
-                ENABLE_TESTS=true
-                shift
-                ;;
             --build-type)
                 BUILD_TYPE=$2
                 shift 2
@@ -79,12 +92,39 @@ function parse-opts {
                 NUM_CORES=$2
                 shift 2
                 ;;
+            --enable-tests)
+                ENABLE_TESTS=true
+                shift
+                ;;
+            --test)
+                ENABLE_TESTS=true
+                RUN_TESTS=true
+                shift
+                ;;
+            --filter)
+                GTEST_FILTER="$2"
+                shift 2
+                ;;
+            --install)
+                INSTALL_BARYON=true
+                shift
+                ;;
+            --clean)
+                CLEAN_BUILD=true
+                shift
+                ;;
+            --*=*)
+                shift
+                LVALUE="${OPTION/=*}"
+                RVALUE="${OPTION:1+${#LVALUE}}"
+                set -- "$LVALUE" "$RVALUE" "$@"
+                ;;
             -[a-z][a-z]*)
                 shift
                 # Expand short args in reverse, in case the right-most arg
                 # accepts a parameter.
                 for (( i = ${#OPTION} - 1; i > 0; i -= 1 )); do
-                    set - "-${OPTION:$i:1}" "$@"
+                    set -- "-${OPTION:$i:1}" "$@"
                 done
                 ;;
             *)
@@ -100,13 +140,7 @@ function parse-opts {
         INSTALL_PREFIX="/usr/local"
     fi
 
-    return $RETURN_CODE
-}
-
-function build-lepton {
-    local RETURN_CODE
-
-    mkdir -p build
+    mkdir -p "$INSTALL_PREFIX"
     RETURN_CODE=$?
 
     if (( RETURN_CODE != EXIT_SUCCESS )); then
@@ -114,7 +148,23 @@ function build-lepton {
         return $EXIT_MKDIR_FAILED
     fi
 
-    pushd build
+    INSTALL_PREFIX="$(cd "$INSTALL_PREFIX"; pwd)"
+
+    return $RETURN_CODE
+}
+
+function build-baryon {
+    local RETURN_CODE
+
+    mkdir -p "$BUILD_DIR"
+    RETURN_CODE=$?
+
+    if (( RETURN_CODE != EXIT_SUCCESS )); then
+        echo "mkdir failed with status $RETURN_CODE" 1>&2
+        return $EXIT_MKDIR_FAILED
+    fi
+
+    pushd "$BUILD_DIR"
 
     cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
           -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
@@ -140,18 +190,39 @@ function build-lepton {
     return $EXIT_SUCCESS
 }
 
-function install-lepton() {
+function test-baryon() {
     local RETURN_CODE
 
-    pushd build
+    pushd "$BUILD_DIR"
+
+    gtest-parallel \
+        --workers="$NUM_CORES" \
+        --print_test_times \
+        --gtest_filter "$GTEST_FILTER" \
+        ./test/test-baryon
+    RETURN_CODE=$?
+
+    if (( RETURN_CODE != EXIT_SUCCESS )); then
+        echo "test-baryon failed with status $RETURN_CODE" 1>&2
+        return $EXIT_TEST_FAILED
+    fi
+
+    popd
+
+    return $EXIT_SUCCESS
+}
+
+function install-baryon() {
+    local RETURN_CODE
+
+    pushd "$BUILD_DIR"
 
     if [ -n "$ENABLE_TESTS" ]; then
-        ./test/test-lepton
+        test-baryon
         RETURN_CODE=$?
 
         if (( RETURN_CODE != EXIT_SUCCESS )); then
-            echo "test-lepton failed with status $RETURN_CODE" 1>&2
-            return $EXIT_TEST_FAILED
+            return $RETURN_CODE
         fi
     fi
 
@@ -188,15 +259,33 @@ function main {
         return $RETURN_CODE
     fi
 
-    build-lepton
+    if [ -n "$CLEAN_BUILD" ] && [ -d "$BUILD_DIR" ]; then
+        rm -rf "$BUILD_DIR"
+        RETURN_CODE=$?
+
+        if (( RETURN_CODE != EXIT_SUCCESS )); then
+            echo "Failed to delete $BUILD_DIR" 1>&2
+            echo "rm -rf \"$BUILD_DIR\" failed with status $RETURN_CODE" 1>&2
+            return $EXIT_RMDIR_FAILED
+        fi
+    fi
+
+    build-baryon
     RETURN_CODE=$?
 
     if (( RETURN_CODE != EXIT_SUCCESS )); then
         return $RETURN_CODE
     fi
 
-    if [ -n "$INSTALL_LEPTON" ]; then
-        install-lepton
+    if [ -n "$INSTALL_BARYON" ]; then
+        install-baryon
+        RETURN_CODE=$?
+
+        if (( RETURN_CODE != EXIT_SUCCESS )); then
+            return $RETURN_CODE
+        fi
+    elif [ -n "$RUN_TESTS" ]; then
+        test-baryon
         RETURN_CODE=$?
 
         if (( RETURN_CODE != EXIT_SUCCESS )); then

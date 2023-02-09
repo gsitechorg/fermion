@@ -1,5 +1,5 @@
-#ifndef LEPTON_GSI_LIBGDL_H
-#define LEPTON_GSI_LIBGDL_H
+#ifndef BARYON_GSI_LIBGDL_H
+#define BARYON_GSI_LIBGDL_H
 
 #include <inttypes.h>
 
@@ -85,6 +85,28 @@ struct gdl_mem_buffer {
     unsigned int size;
 };
 
+typedef enum {
+    GDL_CONTEXT_MEM_SIZE,
+    GDL_CONTEXT_NUM_APUCS,
+    GDL_CONTEXT_STATUS,
+    GDL_CONTEXT_NUM_APUS,
+    GDL_CONTEXT_HW_GENERAL_INFO,
+} gdl_context_property_t;
+
+typedef enum {
+    GDL_ALIGN_16 = 3,
+    GDL_ALIGN_32,
+    GDL_ALIGN_64,
+    GDL_ALIGN_128,
+    GDL_ALIGN_256,
+    GDL_ALIGN_512,
+    GDL_ALIGN_1024,
+    GDL_ALIGN_2048,
+    GDL_ALIGN_4096,
+    GDL_ALIGN_8192,
+    GDL_ALIGN_16384,
+    GDL_ALIGN_32768,
+} gdl_alloc_alignment;
 
 int gdl_context_count_get(unsigned int *count);
 int gdl_context_desc_get(struct gdl_context_desc *ctx_desc, unsigned int count);
@@ -92,7 +114,13 @@ int gdl_context_alloc(gdl_context_handle_t ctx_handler,
                         const unsigned long long const_mapped_size_req,
                         unsigned long long *const_mapped_size_recv,
                         unsigned long long *dynamic_mapped_size_recv);
-gdl_mem_handle_t gdl_mem_alloc_nonull(gdl_context_handle_t ctx_handler, unsigned long long size, gdl_mem_pools pool);
+gdl_mem_handle_t gdl_mem_alloc_nonull(gdl_context_handle_t ctx_handler,
+                                      unsigned long long size,
+                                      gdl_mem_pools pool);
+gdl_mem_handle_t gdl_mem_alloc_aligned(gdl_context_handle_t ctx_handler,
+                                       unsigned long long size,
+                                       gdl_mem_pools pool,
+                                       gdl_alloc_alignment alignment);
 void gdl_mem_free(gdl_mem_handle_t buffer);
 
 uint32_t ptr_to_u32(void *p);
@@ -124,10 +152,8 @@ int gdl_mem_cpy_from_dev(void *dst, gdl_mem_handle_t src, unsigned long long siz
 int gdl_mem_cpy_to_dev(gdl_mem_handle_t dst, const void *src, unsigned long long size);
 void *gdl_mem_handle_to_host_ptr(gdl_mem_handle_t handle);
 
-
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif // LEPTON_GSI_LIBGDL_H
+#endif // BARYON_GSI_LIBGDL_H

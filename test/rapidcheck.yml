@@ -1,0 +1,43 @@
+# --------------------------------------------------------------------------
+# See: https://github.com/emil-e/rapidcheck/blob/master/doc/configuration.md
+# --------------------------------------------------------------------------
+
+# The global random seed used. This is a 64-bit integer. If not set, a random
+# one is chosen using the system random device.
+# seed: 10095974290794820456
+
+# The maximum number of successful test cases to run before deciding that a
+# property holds. Defaults to 100.
+max_success: 10
+
+# The maximum size to use. The size starts at 0 and increases to max_size as the
+# final value. Defaults to 100.
+# max_size: 100
+
+# The maximum number of discarded test cases per successful test case. If
+# exceeded, RapidCheck gives up on the property. Defaults to 10.
+# max_discard_ratio: 10
+
+# If set to 1, disables test case shrinking. Defaults to 0.
+# noshrink: 0
+
+# If set to 1, enables verbose feedback of progress during the testing of a
+# property. For each test case that is run, a character will be printed. Default
+# is 0. Legend:
+# ------------------------------------------------------------------------------
+#   (o) . - Success
+#   (o) x - Discarded
+verbose_progress: 1
+
+# If set to 1, enables verbose feedback during shrinking. For each shrink that
+# is tried, a character will be printed. Default is 0. Legend:
+# ----------------------------------------------------------------------------
+#   (o) . - Unsuccessful shrink
+#   (o) ! - Successful shrink
+verbose_shrinking: 1
+
+# Opaque string that encodes the information necessary to reproduce minimal
+# failures for properties. Since this string is opaque, it can only be obtained
+# from a failed RapidCheck run. Refer to the debugging documentation for more
+# information.
+# reproduce: BQiQhJXev5WQQV1QUV2c09lUhBXakNEalN2avI3cwJzafZWam92fQD1k2IXQY+H0QNpNyFEm_BNUTajcBh5fQD1k2IXQYGAABAAAAAAA

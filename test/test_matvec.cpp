@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include <gsi/gal-fast-funcs.h>
-#include <gsi/lepton/constants.h>
+#include <gsi/baryon/constants.h>
 #include <gsi/libgal.h>
 #include <gsi/libgdl.h>
 #include <gsi/libgvml.h>
@@ -38,14 +38,12 @@ my_dma_l4_to_l2_16k(int apc_id, uint16_t *p16) {
       .l2_mode = GAL_L2T_MODE_64,
       .l2_col_group = 0,
   };
-  /* printf("p16[%d] = 0x%04X\n", 6136, p16[6136]); */
   gal_fast_l2dma_mem_to_l2_start(apc_id, 1, &txn, GAL_L2DMA_L2_READY_SET);
 }
 
 static inline __attribute__((always_inline)) void
 my_dma_l4_to_l2_32k(uint16_t *p16) {
   my_dma_l4_to_l2_16k(0, p16);
-  /* printf("p16[%d] = 0x%04X\n", 22520, p16[22520]); */
   my_dma_l4_to_l2_16k(1, p16 + _16K);
   gal_fast_l2dma_async_memcpy_end(0);
   gal_fast_l2dma_async_memcpy_end(1);
@@ -128,7 +126,7 @@ uint16_t *alloc_random_i16s(unsigned int count) {
   return xs;
 }
 
-gsi_prod_status_t lepton_test_matvec_device(void *in_buf, void *out_buf) {
+gsi_prod_status_t baryon_test_matvec_device(void *in_buf, void *out_buf) {
   gvml_init_once();
 
   struct common_dev_host *p = (struct common_dev_host *) in_buf;
@@ -154,7 +152,7 @@ gsi_prod_status_t lepton_test_matvec_device(void *in_buf, void *out_buf) {
 
   for (size_t k_ = 0; k_ < k; k_ += 1) {
     my_dma_l4_to_l2_32k(static_cast<uint16_t *>(B_l4));
-    B_l4 = increment_p_i16(B_l4, LEPTON_NUM_PLATS_PER_APUC);
+    B_l4 = increment_p_i16(B_l4, BARYON_NUM_PLATS_PER_APUC);
     my_dma_l2_to_l1_32k(L1_reg_B);
     gvml_load_16(B_vr, L1_reg_B);
     uint16_t Ak_ = indirect_p_i16(A_l4, k_);
@@ -184,7 +182,7 @@ void initialize_B(uint32_t k, uint32_t n, uint16_t *B) {
 
 TEST(matvec, test_matvec) {
   size_t k = 10;
-  size_t n = LEPTON_NUM_PLATS_PER_APUC;
+  size_t n = BARYON_NUM_PLATS_PER_APUC;
 
   size_t a_size = k * sizeof(uint16_t);
   size_t b_size = k * n * sizeof(uint16_t);
@@ -240,7 +238,7 @@ TEST(matvec, test_matvec) {
 
   // NOTE: segfaults ...
   /* gdl_run_task_timeout(ctx_id, */
-  /*                      (uintptr_t) lepton_test_matvec_device, */
+  /*                      (uintptr_t) baryon_test_matvec_device, */
   /*                      cmn_struct_mem_handle, */
   /*                      GDL_MEM_HANDLE_NULL, */
   /*                      GDL_TEMPORARY_DEFAULT_MEM_BUF, */
@@ -250,9 +248,9 @@ TEST(matvec, test_matvec) {
   /*                      200, */
   /*                      GDL_USER_MAPPING); */
 
-  ASSERT_FALSE(lepton_test_matvec_device((void *)cmn_struct_mem_handle,
+  ASSERT_FALSE(baryon_test_matvec_device((void *)cmn_struct_mem_handle,
                                          (void *)GDL_MEM_HANDLE_NULL))
-      << "Failed to run lepton_test_matvec_device";
+      << "Failed to run baryon_test_matvec_device";
 
   gdl_mem_cpy_from_dev(c, c_handle, c_size);
 

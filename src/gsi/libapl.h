@@ -1,5 +1,5 @@
-#ifndef __LEPTON__GSI__LIBAPL_H__
-#define __LEPTON__GSI__LIBAPL_H__
+#ifndef __BARYON__GSI__LIBAPL_H__
+#define __BARYON__GSI__LIBAPL_H__
 
 #include <stdint.h>
 
@@ -272,4 +272,4 @@ void apl_set_l1_reg_ext(uint32_t reg_idx, uint32_t bank_id, uint32_t grp_id,
                         uint32_t grp_row);
 void apl_set_l2_reg(uint32_t l2_reg, uint32_t val);
 
-#endif // __LEPTON__GSI__LIBAPL_H__
+#endif // __BARYON__GSI__LIBAPL_H__

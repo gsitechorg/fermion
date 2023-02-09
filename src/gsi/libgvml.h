@@ -1,8 +1,8 @@
-#ifndef LEPTON_GSI_LIBGVML_H
-#define LEPTON_GSI_LIBGVML_H
+#ifndef BARYON_GSI_LIBGVML_H
+#define BARYON_GSI_LIBGVML_H
 
-#include "lepton/apuc.h"
-#include "lepton/seu_layer.h"
+#include "baryon/apuc.h"
+#include "baryon/seu_layer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -112,12 +112,6 @@ enum gvml_vm_reg {
     GVML_VM_47  = 47,
 };
 
-extern lepton_apuc_t apuc;
-extern lepton_seu_layer_t seu_layer;
-
-void lepton_init(void);
-void lepton_exit(void);
-
 int gvml_apl_init(void);
 void gvml_init(void);
 void gvml_init_once(void);
@@ -127,4 +121,4 @@ void gvml_exit(void);
 }
 #endif
 
-#endif // LEPTON_GSI_LIBGVML_H
+#endif // BARYON_GSI_LIBGVML_H

@@ -11,3 +11,7 @@ int gsi_sim_destroy_simulator(void) {
     printf("gsi_sim_destroy_simulator()\n");
     return 0;
 }
+
+void gsi_libsys_exit(void) {
+  // nothing
+}

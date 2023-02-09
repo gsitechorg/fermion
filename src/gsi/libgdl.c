@@ -48,7 +48,7 @@ int gdl_context_desc_get(struct gdl_context_desc *ctx_desc, unsigned int count){
     if (count != 1) {
         error("The count ID must be equal to 1");
     }
-    strcpy(ctx_desc->parent_device_name, "Lepton emulator");
+    strcpy(ctx_desc->parent_device_name, "Baryon emulator");
     ctx_desc->ctx_id = 1;
     ctx_desc->num_apucs = 4;
     ctx_desc->num_apus = 1;
@@ -73,6 +73,13 @@ gdl_mem_handle_t gdl_mem_alloc_nonull(gdl_context_handle_t ctx_handler,
         error("gdl_mem_alloc_nonull: malloc failed");
     }
     return (uintptr_t)mem;
+}
+
+gdl_mem_handle_t gdl_mem_alloc_aligned(gdl_context_handle_t ctx_handler,
+                                       unsigned long long size,
+                                       gdl_mem_pools pool,
+                                       gdl_alloc_alignment alignment) {
+  return gdl_mem_alloc_nonull(ctx_handler, size, pool);
 }
 
 void gdl_mem_free(gdl_mem_handle_t buffer) {
@@ -164,4 +171,3 @@ int gdl_run_task_timeout(gdl_context_handle_t ctx_handler,
     printf("Done task.\n");
     return r;
 }
-

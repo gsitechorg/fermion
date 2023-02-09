@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.25.1 FATAL_ERROR)
-project(lepton LANGUAGES C CXX)
+project(baryon
+  VERSION 1.0.0
+  DESCRIPTION "C backend for Belex."
+  HOMEPAGE_URL "https://bitbucket.org/gsitech/fermion"
+  LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_TESTS "Build testing suite" ON)
 
@@ -8,52 +16,63 @@ message("belex-aot: ${BELEX_AOT}")
 
 add_custom_command(
     OUTPUT
-        "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.c"
-        "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.h"
+        "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.c"
+        "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.h"
     COMMAND "${BELEX_AOT}"
-        -O0
-        --source-file "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.c"
-        --header-file "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.h"
-        --target lepton
+        --source-file "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.c"
+        --header-file "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.h"
+        --target baryon
         --no-uniquify-nyms
-        "${CMAKE_SOURCE_DIR}/src/gsi/lepton/fragments.py"
+        --explicit-frags-only
+        "${CMAKE_SOURCE_DIR}/src/gsi/fragments.py"
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     DEPENDS
-        "${CMAKE_SOURCE_DIR}/src/gsi/lepton/fragments.py"
+        "${CMAKE_SOURCE_DIR}/src/gsi/fragments.py"
     VERBATIM
 )
 
-add_library(gsilepton
-    src/gsi/lepton/operations.c
-    src/gsi/lepton/apuc.c
-    src/gsi/lepton/seu_layer.c
-    "${CMAKE_BINARY_DIR}/gensrc/gsi/lepton/gvml_fragments.c"
+add_library(gsi-baryon-sys
+    src/gsi/baryon/operations.c
+    src/gsi/baryon/fifo.c
+    src/gsi/baryon/apuc.c
+    src/gsi/baryon/seu_layer.c
+    src/gsi/common_api.c
     src/gsi/libapl.c
     src/gsi/libgal.c
-    src/gsi/libgvml.c
     src/gsi/libgdl.c
     src/gsi/libsys.c
 )
-target_include_directories(gsilepton PUBLIC
+
+add_library(gsi-baryon-gvml
+  "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.c"
+  src/gsi/libgvml.c
+)
+
+target_include_directories(gsi-baryon-sys PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
   "${CMAKE_BINARY_DIR}/gensrc"
 )
 
-install(TARGETS gsilepton
+target_include_directories(gsi-baryon-gvml PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/src"
+  "${CMAKE_BINARY_DIR}/gensrc"
+)
+
+install(TARGETS gsi-baryon-sys gsi-baryon-gvml
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
 )
+
 install(
     FILES ${HEADERS}
     DESTINATION include/gsi/
 )
+
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/gsi
         DESTINATION include
         FILES_MATCHING PATTERN "*.h"
 )
-
-
 
 message("Configuration results")
 message("---------------------")

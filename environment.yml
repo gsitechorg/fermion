@@ -1,10 +1,12 @@
-name: lepton
+name: baryon
 channels:
   - conda-forge
   - gsi
 dependencies:
-  - belex=2022.09.20
-  - belex-libs=2022.05.10
-  - clang=15.0.6
-  - cmake=3.25.1
+  - belex=1.0rc5
+  - belex-libs=1.0rc5
+  - rapidcheck=2023.01.13
+  - cmake=3.25.2
   - gtest=1.12.1
+  - gtest-parallel=2022.06.21
+  - yaml-cpp=0.7.0
