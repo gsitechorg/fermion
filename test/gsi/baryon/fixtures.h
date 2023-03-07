@@ -11,8 +11,7 @@ class BaryonAPUCTest : public ::testing::Test {
 protected:
   void SetUp() override;
   void TearDown() override;
-  baryon_rsp32k_fifo_t *rsp32k_fifo;
-  baryon_rsp2k_fifo_t *rsp2k_fifo;
+  baryon_apuc_rsp_fifo_t *apuc_rsp_fifo;
   baryon_apuc_t *apuc;
 };
 

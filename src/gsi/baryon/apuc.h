@@ -280,8 +280,7 @@ typedef enum {
 extern const char *baryon_rsp_mode_name[9];
 
 typedef struct baryon_apuc_t {
-  baryon_rsp32k_fifo_t *rsp32k_fifo;
-  baryon_rsp2k_fifo_t *rsp2k_fifo;
+  baryon_apuc_rsp_fifo_t *apuc_rsp_fifo;
   baryon_rsp_mode_t rsp_mode;
 
   baryon_vr_t vrs[BARYON_NUM_SBS];
@@ -297,6 +296,7 @@ typedef struct baryon_apuc_t {
   baryon_lgl_t lgl;
 
   bool in_place;
+  uint64_t num_instructions;
 
   baryon_vr_t rwinh_filter;
   uint16_t rwinh_sects;
@@ -440,8 +440,7 @@ void baryon_init_l2(baryon_l2_t *l2, bool value);
 void baryon_init_lgl(baryon_lgl_t *lgl, bool value);
 
 void baryon_init_apuc(baryon_apuc_t *apuc,
-                      baryon_rsp32k_fifo_t *rsp32k_fifo,
-                      baryon_rsp2k_fifo_t *rsp2k_fifo);
+                      baryon_apuc_rsp_fifo_t *apuc_rsp_fifo);
 
 void baryon_free_apuc(baryon_apuc_t *apuc);
 void baryon_free_vr(baryon_vr_t *vr);

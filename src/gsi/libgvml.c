@@ -4,7 +4,9 @@
 #include <gsi/gvml_fragments.h>
 #include <gsi/common_api.h>
 
+#include "gal-fast-funcs.h"
 #include "libapl.h"
+#include "libsys.h"
 #include "libgvml.h"
 #include "libgvml_element_wise.h"
 #include "libgvml_memory.h"

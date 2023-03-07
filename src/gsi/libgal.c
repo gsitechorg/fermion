@@ -78,3 +78,7 @@ void gal_init(void) {
 void gal_exit(void) {
   // empty
 }
+
+int gal_set_l2dma_dma_mode(enum gal_l2dma_dma_mode dma_mode) {
+  return 0;
+}

@@ -1,13 +1,13 @@
-#ifndef BARYON_GSI_LIBGDL_H
-#define BARYON_GSI_LIBGDL_H
-
-#include <inttypes.h>
-
-#include "libsys.h"
+#ifndef __GSI__BARYON_LIBGDL_H__
+#define __GSI__BARYON_LIBGDL_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <inttypes.h>
+
+#include "libsys.h"
 
 enum {
     GSI_DRV_MAX_BOARDS                    = 16,
@@ -151,9 +151,10 @@ int gdl_exit(void);
 int gdl_mem_cpy_from_dev(void *dst, gdl_mem_handle_t src, unsigned long long size);
 int gdl_mem_cpy_to_dev(gdl_mem_handle_t dst, const void *src, unsigned long long size);
 void *gdl_mem_handle_to_host_ptr(gdl_mem_handle_t handle);
+int gdl_mem_handle_is_null(gdl_mem_handle_t handle);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // BARYON_GSI_LIBGDL_H
+#endif // __GSI__BARYON_LIBGDL_H__

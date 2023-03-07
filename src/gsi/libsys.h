@@ -1,30 +1,30 @@
-#ifndef BARYON_GSI_LIBSYS_H
-#define BARYON_GSI_LIBSYS_H
-
-#include <stdbool.h>
-#include <inttypes.h>
-
-#include <gsi/libsys/assert.h>
-#include <gsi/libsys/log.h>
+#ifndef __GSI__BARYON__LIBSYS_H__
+#define __GSI__BARYON__LIBSYS_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// TODO: we should figure out how to move this out of public header files:
-typedef uint16_t u16;
+#include <stdbool.h>
+#include <inttypes.h>
 
-typedef int gsi_status_t;
-typedef signed int gsi_prod_int_t;
-typedef gsi_prod_int_t gsi_prod_status_t;
+#include "libsys/assert.h"
+#include "libsys/debug.h"
+#include "libsys/error.h"
+#include "libsys/libc.h"
+#include "libsys/log.h"
+#include "libsys/types.h"
 
 gsi_status_t gsi_libsys_init(const char *argv0, bool log_to_screen);
+
 void gsi_libsys_exit(void);
 
 int gsi_sim_destroy_simulator(void);
+
+const char *gsi_status_errorstr(gsi_status_t status);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // BARYON_GSI_LIBSYS_H
+#endif // __GSI__BARYON__LIBSYS_H__

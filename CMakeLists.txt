@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25.1 FATAL_ERROR)
 project(baryon
-  VERSION 1.0.0
+  VERSION 1.1.0
   DESCRIPTION "C backend for Belex."
   HOMEPAGE_URL "https://bitbucket.org/gsitech/fermion"
   LANGUAGES C CXX)
@@ -41,11 +41,13 @@ add_library(gsi-baryon-sys
     src/gsi/libgal.c
     src/gsi/libgdl.c
     src/gsi/libsys.c
+    src/gsi/gsi_sim_config.c
 )
 
 add_library(gsi-baryon-gvml
   "${CMAKE_BINARY_DIR}/gensrc/gsi/gvml_fragments.c"
   src/gsi/libgvml.c
+  src/gsi/rsp.c
 )
 
 target_include_directories(gsi-baryon-sys PUBLIC

@@ -273,12 +273,12 @@ void baryon_init_lgl(baryon_lgl_t *lgl, bool value) {
   memset(lgl, value, BARYON_LGL_SIZE);
 }
 
-void baryon_init_apuc(baryon_apuc_t *apuc, baryon_rsp32k_fifo_t *rsp32k_fifo,
-                      baryon_rsp2k_fifo_t *rsp2k_fifo) {
+void baryon_init_apuc(baryon_apuc_t *apuc,
+                      baryon_apuc_rsp_fifo_t *apuc_rsp_fifo) {
   apuc->in_place = true;
+  apuc->num_instructions = 0;
 
-  apuc->rsp32k_fifo = rsp32k_fifo;
-  apuc->rsp2k_fifo = rsp2k_fifo;
+  apuc->apuc_rsp_fifo = apuc_rsp_fifo;
   apuc->rsp_mode = BARYON_RSP_MODE_IDLE;
 
   baryon_init_vrs(&apuc->vrs, false);
@@ -754,26 +754,32 @@ void *baryon_fsel_noop(baryon_apuc_t *apuc) {
 }
 
 void baryon_rsp_end_in_place(baryon_apuc_t *apuc) {
-  switch (apuc->rsp_mode) {
-  case BARYON_RSP_MODE_RSP2K_READ: {
-    uint16_t rsp2k[BARYON_NUM_HALF_BANKS_PER_APUC];
-    memset(rsp2k, 0x0000, BARYON_RSP2K_FIFO_SIZE);
-    baryon_foreach_half_bank(half_bank, {
-      baryon_foreach_rsp2k_section(section, {
-        rsp2k[half_bank] |= apuc->rsp2k[section][half_bank] << section;
+  static baryon_rsp_fifo_msg_t rsp_fifo_msg;
+
+  if (apuc->rsp_mode == BARYON_RSP_MODE_RSP32K_READ) {
+    for (size_t apc_id = 0; apc_id < BARYON_NUM_APCS_PER_APUC; apc_id += 1) {
+      size_t offset = apc_id * BARYON_NUM_HALF_BANKS_PER_APC;
+
+      // TODO: Only enqueue rsp2k if enough clock cycles have passed since
+      // calling rsp32k-from-rsp2k (2 cycles before calling rsp_end).
+      memset(&rsp_fifo_msg.rsp2k, 0x0000,
+             BARYON_NUM_HALF_BANKS_PER_APC * sizeof(uint16_t));
+      baryon_foreach_range(half_bank, BARYON_NUM_HALF_BANKS_PER_APC, {
+        baryon_foreach_rsp2k_section(section, {
+          rsp_fifo_msg.rsp2k[half_bank] |=
+            (apuc->rsp2k[section][half_bank + offset] << section);
+        });
       });
-    });
-    baryon_rsp2k_fifo_enqueue(apuc->rsp2k_fifo, rsp2k);
-    break;
-  }
-  case BARYON_RSP_MODE_RSP32K_READ: {
-    uint16_t rsp32k = 0x0000;
-    baryon_foreach_rsp32k_section(section, {
-      rsp32k |= apuc->rsp32k[section] << section;
-    });
-    baryon_rsp32k_fifo_enqueue(apuc->rsp32k_fifo, rsp32k);
-    break;
-  }
+
+      rsp_fifo_msg.rsp32k = 0x00;
+      baryon_foreach_range(section, BARYON_NUM_HALF_BANKS_PER_APC, {
+        rsp_fifo_msg.rsp32k |= (apuc->rsp32k[section + offset] << section);
+      });
+
+      baryon_apc_rsp_fifo_t *apc_rsp_fifo =
+          &apuc->apuc_rsp_fifo->queues[apc_id];
+      baryon_apc_rsp_fifo_enqueue(apc_rsp_fifo, &rsp_fifo_msg);
+    }
   }
 
   apuc->rsp_mode = BARYON_RSP_MODE_IDLE;

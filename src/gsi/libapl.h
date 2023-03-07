@@ -1,6 +1,10 @@
 #ifndef __BARYON__GSI__LIBAPL_H__
 #define __BARYON__GSI__LIBAPL_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 enum sm_regs {
@@ -100,7 +104,6 @@ enum section_bits {
   SB_23 = 23,
 
   NUM_SBS = 16,
-
 };
 
 enum sm_bits {
@@ -120,7 +123,6 @@ enum sm_bits {
   SM_BIT_13 = 13,
   SM_BIT_14 = 14,
   SM_BIT_15 = 15,
-
 };
 
 enum gsi_apc_defs {
@@ -236,30 +238,6 @@ enum gsi_l2_defs {
 #define SM_0X001F SM_REG_14
 #define SM_0X003F SM_REG_15
 
-
-/* Flag IDs (in flags Vector Register) */
-/* pre-defined flags for the flags vector-register */
-#define C_FLAG SM_BIT_0         /* Carry in/out flag */
-#define B_FLAG SM_BIT_1         /* Borrow in/out flag */
-#define OF_FLAG SM_BIT_2        /* Overflow flag */
-#define PE_FLAG SM_BIT_3        /* Parity error */
-#define M16_FLAG SM_BIT_4       /* marker with 1 set for (each vector-register-index % 16) == 0 */
-#define M256_FLAG SM_BIT_5      /* marker with 1 set for (each vector-register-index % 256) == 0 */
-#define M2K_FLAG SM_BIT_6       /* marker with 1 set for (each vector-register-index % 2048) == 0 */
-
-/* Markers for general purpose usage Callee must preserve */
-#define GP0_FLAG SM_BIT_7
-#define GP1_FLAG SM_BIT_8
-#define GP2_FLAG SM_BIT_9
-#define GP3_FLAG SM_BIT_10
-#define GP4_FLAG SM_BIT_11
-
-/* Markers for general purpose usage Callee may overwrite preserve */
-#define TMP0_FLAG SM_BIT_12
-#define TMP1_FLAG SM_BIT_13
-#define TMP2_FLAG SM_BIT_14
-#define TMP3_FLAG SM_BIT_15
-
 /* L1 addressing */
 #define APL_VM_ROWS_PER_U16 4
 
@@ -271,5 +249,13 @@ void apl_set_l1_reg(uint32_t l1_reg, uint32_t val);
 void apl_set_l1_reg_ext(uint32_t reg_idx, uint32_t bank_id, uint32_t grp_id,
                         uint32_t grp_row);
 void apl_set_l2_reg(uint32_t l2_reg, uint32_t val);
+
+void apl_rsp_rd(unsigned int apc_id);
+unsigned int apl_rd_rsp2k_reg(unsigned int bank_id);
+unsigned char apl_rd_rsp32k_reg(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __BARYON__GSI__LIBAPL_H__

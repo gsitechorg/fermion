@@ -9,8 +9,7 @@ extern "C" {
 #include "baryon/apuc.h"
 #include "baryon/seu_layer.h"
 
-extern baryon_rsp32k_fifo_t rsp32k_fifo;
-extern baryon_rsp2k_fifo_t rsp2k_fifo;
+extern baryon_apuc_rsp_fifo_t apuc_rsp_fifo;
 extern baryon_apuc_t apuc;
 extern baryon_seu_layer_t seu_layer;
 

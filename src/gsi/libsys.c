@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "libsys.h"
 
@@ -14,4 +15,16 @@ int gsi_sim_destroy_simulator(void) {
 
 void gsi_libsys_exit(void) {
   // nothing
+}
+
+const char *gsi_status_errorstr(gsi_status_t status)
+{
+  if (!status)
+    return "success";
+  if (status > 0)
+    return "positive";
+  if (!GSI_IS_ERR(status))
+    return "unknown";
+
+  return strerror(-status);
 }
