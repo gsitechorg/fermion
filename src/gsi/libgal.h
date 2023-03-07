@@ -65,6 +65,10 @@ void gal_exit(void);
 
 int gal_set_l2dma_dma_mode(enum gal_l2dma_dma_mode dma_mode);
 
+void gal_pm_start(void);
+void gal_pm_stop(void);
+unsigned long long gal_get_pm_cycle_count(bool is_live);
+
 #ifdef __cplusplus
 }
 #endif

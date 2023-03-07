@@ -82,3 +82,15 @@ void gal_exit(void) {
 int gal_set_l2dma_dma_mode(enum gal_l2dma_dma_mode dma_mode) {
   return 0;
 }
+
+void gal_pm_start() {
+  return;
+}
+
+void gal_pm_stop() {
+  return;
+}
+
+unsigned long long gal_get_pm_cycle_count(bool is_live) {
+  return apuc.num_instructions;
+}
