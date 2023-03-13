@@ -1,5 +1,5 @@
-#ifndef BARYON_GSI_LIBSYS_ASSERT_H
-#define BARYON_GSI_LIBSYS_ASSERT_H
+#ifndef __GSI__BARYON_LIBSYS__ASSERT_H__
+#define __GSI__BARYON_LIBSYS__ASSERT_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,4 +66,4 @@ void some_function6();
 }
 #endif
 
-#endif // BARYON_GSI_LIBSYS_ASSERT_H
+#endif // __GSI__BARYON_LIBSYS__ASSERT_H__

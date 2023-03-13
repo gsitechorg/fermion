@@ -1,5 +1,5 @@
-#ifndef BARYON_GSI_LIBSYS_LOG_H
-#define BARYON_GSI_LIBSYS_LOG_H
+#ifndef __GSI__BARYON__LIBSYS__LOG_H__
+#define __GSI__BARYON__LIBSYS__LOG_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,8 +25,8 @@ enum gsi_log_level {
     printf("\n");                                                              \
   }
 
-#define gsi_log(...)		_gsi_log(__FILE__, __LINE__, __func__, GSI_LOG_INFO, "", ##__VA_ARGS__)
-#define gsi_info(...)		_gsi_log(__FILE__, __LINE__, __func__, GSI_LOG_INFO, "INFO", ##__VA_ARGS__)
+#define gsi_log(...)		  _gsi_log(__FILE__, __LINE__, __func__, GSI_LOG_INFO, "", ##__VA_ARGS__)
+#define gsi_info(...)		  _gsi_log(__FILE__, __LINE__, __func__, GSI_LOG_INFO, "INFO", ##__VA_ARGS__)
 #define gsi_warning(...)	_gsi_log(__FILE__, __LINE__, __func__, GSI_LOG_WARNING, "WARNING", ##__VA_ARGS__)
 #define gsi_error(...)		_gsi_log(__FILE__, __LINE__, __func__, GSI_LOG_ERROR, "ERROR", ##__VA_ARGS__)
 #define gsi_fatal(...)		_gsi_log_fatal(__FILE__, __LINE__, __func__, "FATAL", ##__VA_ARGS__)
@@ -35,4 +35,4 @@ enum gsi_log_level {
 }
 #endif
 
-#endif // BARYON_GSI_LIBSYS_LOG_H
+#endif // __GSI__BARYON__LIBSYS__LOG_H__

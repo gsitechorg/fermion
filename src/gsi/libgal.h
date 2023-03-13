@@ -1,13 +1,16 @@
-#ifndef BARYON_GSI_LIBGAL_H
-#define BARYON_GSI_LIBGAL_H
+#ifndef __GSI__BARYON_LIBGAL_H__
+#define __GSI__BARYON_LIBGAL_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <inttypes.h>
 
 #include "libsys.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define GAL_L2DMA_APC_ID_0 0
+#define GAL_L2DMA_APC_ID_1 1
 
 enum gal_l2t_mode_type {
     GAL_L2T_MODE_8 = 0,
@@ -20,6 +23,11 @@ enum gal_l2dma_cmd_attr {
     GAL_L2DMA_L2_READY_NOP = 0,
     GAL_L2DMA_L2_READY_RST = 2,
     GAL_L2DMA_L2_READY_SET = 3,
+};
+
+enum gal_l2dma_dma_mode {
+    GAL_L2DMA_MODE_DIRECT = 0,
+    GAL_L2DMA_MODE_INDIRECT = 1,
 };
 
 struct gal_l2dma_l2_addr {
@@ -55,8 +63,14 @@ void *gal_mem_handle_to_apu_ptr(gal_mem_handle_t handle);
 void gal_init(void);
 void gal_exit(void);
 
+int gal_set_l2dma_dma_mode(enum gal_l2dma_dma_mode dma_mode);
+
+void gal_pm_start(void);
+void gal_pm_stop(void);
+unsigned long long gal_get_pm_cycle_count(bool is_live);
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif // BARYON_GSI_LIBGAL_H
+#endif // __GSI__BARYON_LIBGAL_H__

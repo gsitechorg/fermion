@@ -1,11 +1,11 @@
-#ifndef BARYON_GSI_GAL_FAST_FUNCS_H
-#define BARYON_GSI_GAL_FAST_FUNCS_H
-
-#include "libgal.h"
+#ifndef __GSI__BARYON__GAL_FAST_FUNCS_H__
+#define __GSI__BARYON__GAL_FAST_FUNCS_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "libgal.h"
 
 struct gal_fast_l2dma_l4_l2_transaction {
     uint64_t num_steps;
@@ -60,4 +60,4 @@ int gal_fast_cache_dcache_flush_mlines(uint32_t start_addr, uint32_t size)
 }
 #endif
 
-#endif // BARYON_GSI_GAL_FAST_FUNCS_H
+#endif // __GSI__BARYON__GAL_FAST_FUNCS_H__

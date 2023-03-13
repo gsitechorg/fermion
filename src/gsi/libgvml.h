@@ -1,12 +1,18 @@
-#ifndef BARYON_GSI_LIBGVML_H
-#define BARYON_GSI_LIBGVML_H
-
-#include "baryon/apuc.h"
-#include "baryon/seu_layer.h"
+#ifndef __GSI__BARYON_LIBGVML_H__
+#define __GSI__BARYON_LIBGVML_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "baryon/apuc.h"
+#include "baryon/seu_layer.h"
+#include "libapl.h"
+
+#define APL_RSP_RD apl_rsp_rd
+#define APL_RD_RSP32K_REG apl_rd_rsp32k_reg
+#define APL_RD_RSP2K_REG apl_rd_rsp2k_reg
+#define FREE_RSP_FIFO(apuc_id) APL_RSP_RD(apuc_id);
 
 enum gvml_vr16 {
     GVML_VR16_0 = 0,
@@ -25,6 +31,81 @@ enum gvml_vr16 {
     GVML_VR16_13    = 13,
     GVML_VR16_14    = 14,
     GVML_VR16_IDX   = 15,
+};
+
+/* Flag IDs (in flags Vector Register) */
+enum gvml_flgs {
+    /* pre-defined flags for the flags vector-register */
+    C_FLAG          = SM_BIT_0,             /* Carry in/out flag */
+    B_FLAG          = SM_BIT_1,             /* Borrow in/out flag */
+    OF_FLAG         = SM_BIT_2,             /* Overflow flag */
+    PE_FLAG         = SM_BIT_3,             /* Parity error */
+    M16_FLAG        = SM_BIT_4,             /* marker with 1 set for (each vector-register-index % 16) == 0 */
+    M256_FLAG       = SM_BIT_5,             /* marker with 1 set for (each vector-register-index % 256) == 0 */
+    M2K_FLAG        = SM_BIT_6,             /* marker with 1 set for (each vector-register-index % 2048) == 0 */
+
+    /* Markers for general purpose usage Callee must preserve */
+    GP0_FLAG        = SM_BIT_7,
+    GP1_FLAG        = SM_BIT_8,
+    GP2_FLAG        = SM_BIT_9,
+    GP3_FLAG        = SM_BIT_10,
+    GP4_FLAG        = SM_BIT_11,
+
+    /* Markers for general purpose usage Callee may overwrite preserve */
+    TMP0_FLAG       = SM_BIT_12,
+    TMP1_FLAG       = SM_BIT_13,
+    TMP2_FLAG       = SM_BIT_14,
+    TMP3_FLAG       = SM_BIT_15,
+};
+
+/* MMB Flag IDs (in flags Vector Register) */
+enum mmb_flgs {
+    /* pre-defined flags for the flags vector-register */
+    /* C_FLAG          = SM_BIT_0,             /\* Carry in/out flag *\/ */
+    /* B_FLAG          = SM_BIT_1,             /\* Borrow in/out flag *\/ */
+    /* OF_FLAG         = SM_BIT_2,             /\* Overflow flag *\/ */
+    /* PE_FLAG         = SM_BIT_3,             /\* Parity error *\/ */
+
+    /* Markers for general purpose usage Callee must preserve */
+    GP0_MRK         = SM_BIT_4,
+    GP1_MRK         = SM_BIT_5,
+    GP2_MRK         = SM_BIT_6,
+    GP3_MRK         = SM_BIT_7,
+    GP4_MRK         = SM_BIT_8,
+    GP5_MRK         = SM_BIT_9,
+    GP6_MRK         = SM_BIT_10,
+    GP7_MRK         = SM_BIT_11,
+
+    /* Markers for general purpose usage Callee may overwrite preserve */
+    TMP0_MRK        = SM_BIT_12,
+    TMP1_MRK        = SM_BIT_13,
+    TMP2_MRK        = SM_BIT_14,
+    TMP3_MRK        = SM_BIT_15,
+
+    /* General purpose vector-markers */
+    FIRST_GP0_MRK = GP0_MRK,
+    LAST_GP7_MRK = GP7_MRK,
+
+    /* Temporary vector-markers */
+    FIRST_TMP0_MRK = TMP0_MRK,
+    LAST_TMP3_MRK = TMP3_MRK
+};
+
+
+/* Flag bitmasks (correspond to enum gvml_flgs flag IDs) */
+enum gvml_mrks_n_flgs {
+    GVML_C_FLAG     = 1 << C_FLAG,          /* Carry in/out flag */
+    GVML_B_FLAG     = 1 << B_FLAG,          /* Borrow in/out flag */
+    GVML_OF_FLAG    = 1 << OF_FLAG,         /* Overflow flag */
+    GVML_PE_FLAG    = 1 << PE_FLAG,         /* Parity error flag */
+    GVML_16B_MRK    = 1 << M16_FLAG,        /* marker with 1 set for each (vector-register-index % 16) == 0 */
+    GVML_256B_MRK   = 1 << M256_FLAG,       /* marker with 1 set for each (vector-register-index % 256) == 0 */
+    GVML_2KB_MRK    = 1 << M2K_FLAG,        /* marker with 1 set for each (vector-register-index % 2048) == 0 */
+    GVML_MRK0       = 1 << GP0_FLAG,        /* General purpose marker */
+    GVML_MRK1       = 1 << GP1_FLAG,        /* General purpose marker */
+    GVML_MRK2       = 1 << GP2_FLAG,        /* General purpose marker */
+    GVML_MRK3       = 1 << GP3_FLAG,        /* General purpose marker */
+    GVML_MRK4       = 1 << GP4_FLAG,        /* General purpose marker */
 };
 
 enum mmb_vr16 {
@@ -59,6 +140,25 @@ enum mmb_vr16 {
   VR16_T_LAST = VR16_T6,
 
   APL_INVAL_ROWNUM = 0xff,
+};
+
+enum gvml_power2_sizes {
+    GVML_P2_1       = 0,
+    GVML_P2_2       = 1,
+    GVML_P2_4       = 2,
+    GVML_P2_8       = 3,
+    GVML_P2_16      = 4,
+    GVML_P2_32      = 5,
+    GVML_P2_64      = 6,
+    GVML_P2_128     = 7,
+    GVML_P2_256     = 8,
+    GVML_P2_512     = 9,
+    GVML_P2_1K      = 10,
+    GVML_P2_2K      = 11,
+    GVML_P2_4K      = 12,
+    GVML_P2_8K      = 13,
+    GVML_P2_16K     = 14,
+    GVML_P2_32K     = 15,
 };
 
 enum gvml_vm_reg {
@@ -121,4 +221,4 @@ void gvml_exit(void);
 }
 #endif
 
-#endif // BARYON_GSI_LIBGVML_H
+#endif // __GSI__BARYON_LIBGVML_H__

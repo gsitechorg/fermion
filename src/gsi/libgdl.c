@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,13 +15,17 @@ void error(char *msg) {
 
 // Init/Exit
 
+static bool gdl_initialized;
+
 int gdl_init(void) {
     printf("gdl_init()\n");
+    gdl_initialized = true;
     return 0;
 }
 
 int gdl_exit(void) {
     printf("gdl_exit()\n");
+    gdl_initialized = false;
     return 0;
 }
 
@@ -170,4 +175,9 @@ int gdl_run_task_timeout(gdl_context_handle_t ctx_handler,
     gsi_prod_status_t r = task((void*)inp, (void*)outp);
     printf("Done task.\n");
     return r;
+}
+
+int gdl_mem_handle_is_null(gdl_mem_handle_t handle)
+{
+  return (void *) handle == NULL;
 }
