@@ -5,6 +5,16 @@
 #include "fixtures.h"
 #include "generators.h"
 
+static void read_rl_into_rsp32k(baryon_apuc_t *apuc, baryon_sm_t mask) {
+  baryon_rsp16_from_rl(apuc, mask);
+  baryon_rsp256_from_rsp16(apuc);
+  baryon_rsp2k_from_rsp256(apuc);
+  baryon_rsp32k_from_rsp2k(apuc);
+  baryon_noop(apuc);
+  baryon_noop(apuc);
+  baryon_rsp_end(apuc);
+}
+
 RC_GTEST_FIXTURE_PROP(BaryonAPUCTest, apuc_rsp_fifo, ()) {
   baryon_sm_t mask = baryon_gen_mask();
 
@@ -50,4 +60,15 @@ RC_GTEST_FIXTURE_PROP(BaryonAPUCTest, apuc_rsp_fifo, ()) {
     uint8_t rsp32k_value = baryon_rd_rsp32k_reg(apuc_rsp_fifo);
     RC_ASSERT(rsp32k_value == ((expected_rsp32k >> offset) & 0xFF));
   }
+
+  for (size_t i = 0; i < BARYON_FIFO_CAPACITY; i += 1) {
+    read_rl_into_rsp32k(apuc, mask);
+    // Add 1 to BARYON_FIFO_CAPACITY for the initial offset (internal detail)
+    RC_ASSERT(apuc_rsp_fifo->queues[0].length <= BARYON_FIFO_CAPACITY + 1);
+    RC_ASSERT(apuc_rsp_fifo->queues[1].length <= BARYON_FIFO_CAPACITY + 1);
+  }
+  // Should not append another message when the queue is full
+  read_rl_into_rsp32k(apuc, mask);
+  RC_ASSERT(apuc_rsp_fifo->queues[0].length == BARYON_FIFO_CAPACITY + 1);
+  RC_ASSERT(apuc_rsp_fifo->queues[1].length == BARYON_FIFO_CAPACITY + 1);
 }
