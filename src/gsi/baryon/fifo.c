@@ -28,7 +28,8 @@ void baryon_free_apuc_rsp_fifo(baryon_apuc_rsp_fifo_t *apuc_rsp_fifo) {
 
 int baryon_apc_rsp_fifo_enqueue(baryon_apc_rsp_fifo_t *apc_rsp_fifo,
                                 baryon_rsp_fifo_msg_t *rsp_fifo_msg) {
-  if (apc_rsp_fifo->length == BARYON_FIFO_CAPACITY) {
+  // NOTE: Add 1 to BARYON_FIFO_CAPACITY for the initial offset
+  if (apc_rsp_fifo->length == BARYON_FIFO_CAPACITY + 1) {
     return 1;
   }
   size_t index =
