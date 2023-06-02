@@ -542,25 +542,55 @@ void *baryon_rsp_start_ret(baryon_apuc_t *apuc);
 void baryon_l2_end_in_place(baryon_apuc_t *apuc);
 void *baryon_l2_end(baryon_apuc_t *apuc);
 
+baryon_rl_t *baryon_rl_in_place(baryon_apuc_t *apuc, baryon_rl_t *rl);
 baryon_rl_t *baryon_rl(baryon_apuc_t *apuc);
+
+baryon_rl_t *baryon_nrl_in_place(baryon_apuc_t *apuc, baryon_rl_t *nrl);
 baryon_rl_t *baryon_nrl(baryon_apuc_t *apuc);
+
+baryon_rl_t *baryon_erl_in_place(baryon_apuc_t *apuc, baryon_rl_t *erl);
 baryon_rl_t *baryon_erl(baryon_apuc_t *apuc);
+
+baryon_rl_t *baryon_wrl_in_place(baryon_apuc_t *apuc, baryon_rl_t *wrl);
 baryon_rl_t *baryon_wrl(baryon_apuc_t *apuc);
+
+baryon_rl_t *baryon_srl_in_place(baryon_apuc_t *apuc, baryon_rl_t *srl);
 baryon_rl_t *baryon_srl(baryon_apuc_t *apuc);
 
+baryon_rl_t *baryon_inv_rl_in_place(baryon_apuc_t *apuc, baryon_rl_t *inv_rl);
 baryon_rl_t *baryon_inv_rl(baryon_apuc_t *apuc);
+
+baryon_rl_t *baryon_inv_nrl_in_place(baryon_apuc_t *apuc, baryon_rl_t *inv_nrl);
 baryon_rl_t *baryon_inv_nrl(baryon_apuc_t *apuc);
+
+baryon_rl_t *baryon_inv_erl_in_place(baryon_apuc_t *apuc, baryon_rl_t *inv_erl);
 baryon_rl_t *baryon_inv_erl(baryon_apuc_t *apuc);
+
+baryon_rl_t *baryon_inv_wrl_in_place(baryon_apuc_t *apuc, baryon_rl_t *inv_wrl);
 baryon_rl_t *baryon_inv_wrl(baryon_apuc_t *apuc);
+
+baryon_rl_t *baryon_inv_srl_in_place(baryon_apuc_t *apuc, baryon_rl_t *inv_srl);
 baryon_rl_t *baryon_inv_srl(baryon_apuc_t *apuc);
 
+baryon_gl_t *baryon_gl_in_place(baryon_apuc_t *apuc, baryon_gl_t *gl);
 baryon_gl_t *baryon_gl(baryon_apuc_t *apuc);
+
+baryon_gl_t *baryon_inv_gl_in_place(baryon_apuc_t *apuc, baryon_gl_t *inv_gl);
 baryon_gl_t *baryon_inv_gl(baryon_apuc_t *apuc);
 
+baryon_ggl_t *baryon_ggl_in_place(baryon_apuc_t *apuc, baryon_ggl_t *ggl);
 baryon_ggl_t *baryon_ggl(baryon_apuc_t *apuc);
+
+baryon_ggl_t *baryon_inv_ggl_in_place(baryon_apuc_t *apuc,
+                                      baryon_ggl_t *inv_ggl);
 baryon_ggl_t *baryon_inv_ggl(baryon_apuc_t *apuc);
 
+baryon_rsp16_t *baryon_rsp16_in_place(baryon_apuc_t *apuc,
+                                      baryon_rsp16_t *rsp16);
 baryon_rsp16_t *baryon_rsp16(baryon_apuc_t *apuc);
+
+baryon_rsp16_t *baryon_inv_rsp16_in_place(baryon_apuc_t *apuc,
+                                          baryon_rsp16_t *inv_rsp16);
 baryon_rsp16_t *baryon_inv_rsp16(baryon_apuc_t *apuc);
 
 void *baryon_src(baryon_apuc_t *apuc, baryon_src_t src_type);
