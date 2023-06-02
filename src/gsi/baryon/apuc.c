@@ -845,27 +845,31 @@ static inline void baryon_invert_rl(baryon_rl_t *tgt, baryon_rl_t *src) {
   });
 }
 
-baryon_rl_t *baryon_rl(baryon_apuc_t *apuc) {
-  baryon_rl_t *rl = malloc(sizeof(baryon_rl_t));
+baryon_rl_t *baryon_rl_in_place(baryon_apuc_t *apuc, baryon_rl_t *rl) {
   memcpy(rl, &apuc->rl, BARYON_RL_SIZE);
   return rl;
 }
 
-baryon_rl_t *baryon_nrl(baryon_apuc_t *apuc) {
-  baryon_rl_t *nrl = malloc(sizeof(baryon_rl_t));
-  baryon_foreach_rl_plat(plat, {
-    (*nrl)[0][plat] = false;
-  });
+baryon_rl_t *baryon_rl(baryon_apuc_t *apuc) {
+  baryon_rl_t *rl = malloc(sizeof(baryon_rl_t));
+  return baryon_rl_in_place(apuc, rl);
+}
+
+baryon_rl_t *baryon_nrl_in_place(baryon_apuc_t *apuc, baryon_rl_t *nrl) {
+  baryon_foreach_rl_plat(plat, { (*nrl)[0][plat] = false; });
   baryon_foreach_range(section, 1, BARYON_NUM_SECTIONS, {
-    baryon_foreach_rl_plat(plat, {
-      (*nrl)[section][plat] = apuc->rl[section - 1][plat];
-    });
+    baryon_foreach_rl_plat(
+        plat, { (*nrl)[section][plat] = apuc->rl[section - 1][plat]; });
   });
   return nrl;
 }
 
-baryon_rl_t *baryon_erl(baryon_apuc_t *apuc) {
-  baryon_rl_t *erl = malloc(sizeof(baryon_rl_t));
+baryon_rl_t *baryon_nrl(baryon_apuc_t *apuc) {
+  baryon_rl_t *nrl = malloc(sizeof(baryon_rl_t));
+  return baryon_nrl_in_place(apuc, nrl);
+}
+
+baryon_rl_t *baryon_erl_in_place(baryon_apuc_t *apuc, baryon_rl_t *erl) {
   baryon_foreach_half_bank(half_bank, {
     size_t lower = half_bank * BARYON_NUM_PLATS_PER_HALF_BANK;
     size_t upper = lower + BARYON_NUM_PLATS_PER_HALF_BANK;
@@ -879,8 +883,12 @@ baryon_rl_t *baryon_erl(baryon_apuc_t *apuc) {
   return erl;
 }
 
-baryon_rl_t *baryon_wrl(baryon_apuc_t *apuc) {
-  baryon_rl_t *wrl = malloc(sizeof(baryon_rl_t));
+baryon_rl_t *baryon_erl(baryon_apuc_t *apuc) {
+  baryon_rl_t *erl = malloc(sizeof(baryon_rl_t));
+  return baryon_erl_in_place(apuc, erl);
+}
+
+baryon_rl_t *baryon_wrl_in_place(baryon_apuc_t *apuc, baryon_rl_t *wrl) {
   baryon_foreach_half_bank(half_bank, {
     size_t lower = half_bank * BARYON_NUM_PLATS_PER_HALF_BANK;
     size_t upper = lower + BARYON_NUM_PLATS_PER_HALF_BANK;
@@ -894,89 +902,147 @@ baryon_rl_t *baryon_wrl(baryon_apuc_t *apuc) {
   return wrl;
 }
 
-baryon_rl_t *baryon_srl(baryon_apuc_t *apuc) {
-  baryon_rl_t *srl = malloc(sizeof(baryon_rl_t));
-  baryon_foreach_rl_plat(plat, {
-    (*srl)[BARYON_NUM_SECTIONS - 1][plat] = false;
-  });
+baryon_rl_t *baryon_wrl(baryon_apuc_t *apuc) {
+  baryon_rl_t *wrl = malloc(sizeof(baryon_rl_t));
+  return baryon_wrl_in_place(apuc, wrl);
+}
+
+baryon_rl_t *baryon_srl_in_place(baryon_apuc_t *apuc, baryon_rl_t *srl) {
+  baryon_foreach_rl_plat(plat,
+                         { (*srl)[BARYON_NUM_SECTIONS - 1][plat] = false; });
   baryon_foreach_range(section, BARYON_NUM_SECTIONS - 1, {
-    baryon_foreach_rl_plat(plat, {
-      (*srl)[section][plat] = apuc->rl[section + 1][plat];
-    });
+    baryon_foreach_rl_plat(
+        plat, { (*srl)[section][plat] = apuc->rl[section + 1][plat]; });
   });
   return srl;
 }
 
-baryon_rl_t *baryon_inv_rl(baryon_apuc_t *apuc) {
-  baryon_rl_t *inv_rl = malloc(sizeof(baryon_rl_t));
+baryon_rl_t *baryon_srl(baryon_apuc_t *apuc) {
+  baryon_rl_t *srl = malloc(sizeof(baryon_rl_t));
+  return baryon_srl_in_place(apuc, srl);
+}
+
+baryon_rl_t *baryon_inv_rl_in_place(baryon_apuc_t *apuc, baryon_rl_t *inv_rl) {
   baryon_invert_rl(inv_rl, &apuc->rl);
   return inv_rl;
 }
 
-baryon_rl_t *baryon_inv_nrl(baryon_apuc_t *apuc) {
-  baryon_rl_t *inv_nrl = baryon_nrl(apuc);
+baryon_rl_t *baryon_inv_rl(baryon_apuc_t *apuc) {
+  baryon_rl_t *inv_rl = malloc(sizeof(baryon_rl_t));
+  return baryon_inv_rl_in_place(apuc, inv_rl);
+}
+
+baryon_rl_t *baryon_inv_nrl_in_place(baryon_apuc_t *apuc, baryon_rl_t *inv_nrl) {
+  baryon_nrl_in_place(apuc, inv_nrl);
   baryon_invert_rl(inv_nrl, inv_nrl);
   return inv_nrl;
 }
 
-baryon_rl_t *baryon_inv_erl(baryon_apuc_t *apuc) {
-  baryon_rl_t *inv_erl = baryon_erl(apuc);
+baryon_rl_t *baryon_inv_nrl(baryon_apuc_t *apuc) {
+  baryon_rl_t *inv_nrl = malloc(sizeof(baryon_rl_t));
+  return baryon_inv_nrl_in_place(apuc, inv_nrl);
+}
+
+baryon_rl_t *baryon_inv_erl_in_place(baryon_apuc_t *apuc, baryon_rl_t *inv_erl) {
+  baryon_erl_in_place(apuc, inv_erl);
   baryon_invert_rl(inv_erl, inv_erl);
   return inv_erl;
 }
 
-baryon_rl_t *baryon_inv_wrl(baryon_apuc_t *apuc) {
-  baryon_rl_t *inv_wrl = baryon_wrl(apuc);
+baryon_rl_t *baryon_inv_erl(baryon_apuc_t *apuc) {
+  baryon_rl_t *inv_erl = malloc(sizeof(baryon_rl_t));
+  return baryon_inv_erl_in_place(apuc, inv_erl);
+}
+
+baryon_rl_t *baryon_inv_wrl_in_place(baryon_apuc_t *apuc, baryon_rl_t *inv_wrl) {
+  baryon_wrl_in_place(apuc, inv_wrl);
   baryon_invert_rl(inv_wrl, inv_wrl);
   return inv_wrl;
 }
 
-baryon_rl_t *baryon_inv_srl(baryon_apuc_t *apuc) {
-  baryon_rl_t *inv_srl = baryon_srl(apuc);
+baryon_rl_t *baryon_inv_wrl(baryon_apuc_t *apuc) {
+  baryon_rl_t *inv_wrl = malloc(sizeof(baryon_rl_t));
+  return baryon_inv_wrl_in_place(apuc, inv_wrl);
+}
+
+baryon_rl_t *baryon_inv_srl_in_place(baryon_apuc_t *apuc, baryon_rl_t *inv_srl) {
+  baryon_srl_in_place(apuc, inv_srl);
   baryon_invert_rl(inv_srl, inv_srl);
   return inv_srl;
 }
 
-baryon_gl_t *baryon_gl(baryon_apuc_t *apuc) {
-  baryon_gl_t *gl = malloc(sizeof(baryon_gl_t));
+baryon_rl_t *baryon_inv_srl(baryon_apuc_t *apuc) {
+  baryon_rl_t *inv_srl = malloc(sizeof(baryon_rl_t));
+  return baryon_inv_srl_in_place(apuc, inv_srl);
+}
+
+baryon_gl_t *baryon_gl_in_place(baryon_apuc_t *apuc, baryon_gl_t *gl) {
   memcpy(gl, &apuc->gl, BARYON_GL_SIZE);
   return gl;
 }
 
-baryon_gl_t *baryon_inv_gl(baryon_apuc_t *apuc) {
-  baryon_gl_t *inv_gl = malloc(sizeof(baryon_gl_t));
+baryon_gl_t *baryon_gl(baryon_apuc_t *apuc) {
+  baryon_gl_t *gl = malloc(sizeof(baryon_gl_t));
+  return baryon_gl_in_place(apuc, gl);
+}
+
+baryon_gl_t *baryon_inv_gl_in_place(baryon_apuc_t *apuc, baryon_gl_t *inv_gl) {
   baryon_foreach_gl_plat(plat, {
     (*inv_gl)[plat] = !apuc->gl[plat];
   });
   return inv_gl;
 }
 
-baryon_ggl_t *baryon_ggl(baryon_apuc_t *apuc) {
-  baryon_ggl_t *ggl = malloc(sizeof(baryon_ggl_t));
+baryon_gl_t *baryon_inv_gl(baryon_apuc_t *apuc) {
+  baryon_gl_t *inv_gl = malloc(sizeof(baryon_gl_t));
+  return baryon_inv_gl_in_place(apuc, inv_gl);
+}
+
+baryon_ggl_t *baryon_ggl_in_place(baryon_apuc_t *apuc, baryon_ggl_t *ggl) {
   memcpy(ggl, &apuc->ggl, BARYON_GGL_SIZE);
   return ggl;
 }
 
-baryon_ggl_t *baryon_inv_ggl(baryon_apuc_t *apuc) {
-  baryon_ggl_t *inv_ggl = malloc(sizeof(baryon_ggl_t));
+baryon_ggl_t *baryon_ggl(baryon_apuc_t *apuc) {
+  baryon_ggl_t *ggl = malloc(sizeof(baryon_ggl_t));
+  return baryon_ggl_in_place(apuc, ggl);
+}
+
+baryon_ggl_t *baryon_inv_ggl_in_place(baryon_apuc_t *apuc,
+                                      baryon_ggl_t *inv_ggl) {
   baryon_foreach_ggl_group_plat(group, plat, {
     (*inv_ggl)[group][plat] = !apuc->ggl[group][plat];
   });
   return inv_ggl;
 }
 
-baryon_rsp16_t *baryon_rsp16(baryon_apuc_t *apuc) {
-  baryon_rsp16_t *rsp16 = malloc(sizeof(baryon_rsp16_t));
+baryon_ggl_t *baryon_inv_ggl(baryon_apuc_t *apuc) {
+  baryon_ggl_t *inv_ggl = malloc(sizeof(baryon_ggl_t));
+  return baryon_inv_ggl_in_place(apuc, inv_ggl);
+}
+
+baryon_rsp16_t *baryon_rsp16_in_place(baryon_apuc_t *apuc,
+                                      baryon_rsp16_t *rsp16) {
   memcpy(rsp16, &apuc->rsp16, BARYON_RSP16_SIZE);
   return rsp16;
 }
 
-baryon_rsp16_t *baryon_inv_rsp16(baryon_apuc_t *apuc) {
-  baryon_rsp16_t *inv_rsp16 = malloc(sizeof(baryon_rsp16_t));
+baryon_rsp16_t *baryon_rsp16(baryon_apuc_t *apuc) {
+  baryon_rsp16_t *rsp16 = malloc(sizeof(baryon_rsp16_t));
+  return baryon_rsp16_in_place(apuc, rsp16);
+}
+
+baryon_rsp16_t *baryon_inv_rsp16_in_place(baryon_apuc_t *apuc,
+                                          baryon_rsp16_t *inv_rsp16) {
   baryon_foreach_rsp16_section_plat(section, plat, {
     (*inv_rsp16)[section][plat] = !apuc->rsp16[section][plat];
   });
   return inv_rsp16;
+}
+
+baryon_rsp16_t *baryon_inv_rsp16(baryon_apuc_t *apuc) {
+  baryon_rsp16_t *inv_rsp16 = malloc(sizeof(baryon_rsp16_t));
+  return baryon_inv_rsp16_in_place(apuc, inv_rsp16);
 }
 
 void *baryon_src(baryon_apuc_t *apuc, baryon_src_t src_type) {
