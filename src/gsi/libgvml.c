@@ -56,6 +56,10 @@ void gvml_exit() {
   init_done = false;
 }
 
+bool is_gvml_init() {
+  return init_done;
+}
+
 void gvml_add_u16(enum gvml_vr16 res, enum gvml_vr16 x, enum gvml_vr16 y) {
   apl_set_rn_reg(RN_REG_G0, x);
   apl_set_rn_reg(RN_REG_G1, y);

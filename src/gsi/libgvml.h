@@ -216,6 +216,7 @@ int gvml_apl_init(void);
 void gvml_init(void);
 void gvml_init_once(void);
 void gvml_exit(void);
+bool is_gvml_init(void);
 
 #ifdef __cplusplus
 }
