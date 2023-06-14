@@ -94,3 +94,7 @@ void gal_pm_stop() {
 unsigned long long gal_get_pm_cycle_count(bool is_live) {
   return apuc.num_instructions;
 }
+
+unsigned long long gal_get_pm_inst_count(bool is_live) {
+  return apuc.num_instructions;
+}

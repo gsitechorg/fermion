@@ -2,6 +2,7 @@
 
 #include <gsi/gal-fast-funcs.h>
 #include <gsi/libgal.h>
+#include <gsi/libgvml_element_wise.h>
 #include <gsi/libgvml_memory.h>
 
 #include <gtest/gtest.h>
@@ -59,4 +60,9 @@ TEST_F(BaryonGVMLTest, gal_mem_to_l2_to_mem) {
 
   free(q);
   free(p);
+}
+
+TEST_F(BaryonGVMLTest, gal_get_pm_inst_count) {
+  gvml_add_u16(GVML_VR16_0, GVML_VR16_1, GVML_VR16_2);
+  ASSERT_EQ(gal_get_pm_inst_count(true), 12);
 }
