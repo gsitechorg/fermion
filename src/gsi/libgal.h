@@ -64,6 +64,8 @@ void gal_init(void);
 void gal_exit(void);
 
 int gal_set_l2dma_dma_mode(enum gal_l2dma_dma_mode dma_mode);
+void *gal_malloc(uint32_t size);
+void gal_free(const void *p);
 
 void gal_pm_start(void);
 void gal_pm_stop(void);
