@@ -10,5 +10,3 @@ dependencies:
   - gtest=1.12.1
   - gtest-parallel=2022.06.21
   - yaml-cpp=0.7.0
-  - clang=15.0.6
-
