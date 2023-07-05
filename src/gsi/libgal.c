@@ -15,6 +15,16 @@ void gal_fast_l2dma_l2_ready_rst_all() {
   // nothing to do
 }
 
+void *gal_malloc(uint32_t size)
+{
+  return malloc(size);
+}
+
+void gal_free(const void *p)
+{
+  free((void *)p);
+}
+
 void gal_fast_l2dma_l2_to_mem_start(uint32_t apc_id,
                 uint32_t num_transactions,
                 struct gal_fast_l2dma_l4_l2_transaction *transactions,
