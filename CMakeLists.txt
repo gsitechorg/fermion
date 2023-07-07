@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25.1 FATAL_ERROR)
 project(baryon
-  VERSION 1.3.0
+  VERSION 1.4.0
   DESCRIPTION "C backend for Belex."
   HOMEPAGE_URL "https://bitbucket.org/gsitech/fermion"
   LANGUAGES C CXX)
