@@ -1473,9 +1473,9 @@ baryon_wordline_map_t * baryon_sb_cond_eq_inv_src(baryon_apuc_t *apuc,
 
 void baryon_set_rl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask, bool bit) {
   baryon_wordline_t *wordline = malloc(BARYON_WORDLINE_SIZE);
-  memset(wordline, bit, BARYON_WORDLINE_SIZE);
 
   baryon_foreach_masked_section(mask, section, {
+    memset(wordline, bit, BARYON_WORDLINE_SIZE);
     baryon_wordline_t *lhs = &apuc->rl[section];
     baryon_wordline_t *result = wordline;
     baryon_rwinh_in_place(apuc, lhs, section, result);
@@ -2873,7 +2873,7 @@ baryon_ggl_t *baryon_ggl_from_rl_and_l1(baryon_apuc_t *apuc, size_t mask,
 }
 
 void baryon_rwinh_set_in_place(baryon_apuc_t *apuc, size_t mask) {
-  apuc->rwinh_sects = mask;
+  apuc->rwinh_sects |= mask;
   baryon_foreach_masked_section(mask, section, {
     memcpy(&apuc->rwinh_filter[section],
            &apuc->rl[section],
