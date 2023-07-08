@@ -15,7 +15,7 @@ extern baryon_seu_layer_t seu_layer;
 
 extern baryon_rl_t src_rl;
 extern baryon_gl_t src_gl;
-extern baryon_gl_t src_ggl;
+extern baryon_ggl_t src_ggl;
 extern baryon_rsp16_t src_rsp16;
 
 void baryon_init(void);

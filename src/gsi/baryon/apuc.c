@@ -1148,16 +1148,15 @@ void baryon_sb_op_eq_gl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
                                  baryon_vr_t *vrs[], size_t num_vrs,
                                  baryon_binary_op_t op, baryon_gl_t *gl) {
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs = baryon_left_and_right(gl, filter);
+    baryon_wordline_t *rhs = gl;
     baryon_foreach_range(i, num_vrs, {
       baryon_vr_t *vr = vrs[i];
       baryon_wordline_t *lhs = &(*vr)[section];
       baryon_wordline_t *result = op(lhs, rhs);
+      baryon_rwinh_in_place(apuc, lhs, section, result);
       memcpy(lhs, result, BARYON_WORDLINE_SIZE);
       baryon_free_wordline(result);
     });
-    baryon_free_wordline(rhs);
   });
 }
 
@@ -1180,18 +1179,17 @@ baryon_wordline_map_t *baryon_sb_op_eq_gl(baryon_apuc_t *apuc,
 
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs = baryon_left_and_right(gl, filter);
+    baryon_wordline_t *rhs = gl;
     baryon_foreach_range(i, num_vrs, {
       baryon_vr_t *vr = vrs[i];
       baryon_wordline_t *lhs = &(*vr)[section];
       baryon_wordline_t *result = op(lhs, rhs);
+      baryon_rwinh_in_place(apuc, lhs, section, result);
       patch->updates[nth_update].vr = vr;
       patch->updates[nth_update].section = section;
       patch->updates[nth_update].update = result;
       nth_update += 1;
     });
-    baryon_free_wordline(rhs);
   });
 
   return patch;
@@ -1202,16 +1200,15 @@ void baryon_sb_op_eq_ggl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
                                   baryon_binary_op_t op, baryon_ggl_t *ggl) {
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *pseudo_gl = &(*ggl)[section / BARYON_NUM_GROUPS];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs = baryon_left_and_right(pseudo_gl, filter);
+    baryon_wordline_t *rhs = pseudo_gl;
     baryon_foreach_range(i, num_vrs, {
       baryon_vr_t *vr = vrs[i];
       baryon_wordline_t *lhs = &(*vr)[section];
       baryon_wordline_t *result = op(lhs, rhs);
+      baryon_rwinh_in_place(apuc, lhs, section, result);
       memcpy(lhs, result, BARYON_WORDLINE_SIZE);
       baryon_free_wordline(result);
     });
-    baryon_free_wordline(rhs);
   });
 }
 
@@ -1235,19 +1232,17 @@ baryon_wordline_map_t *baryon_sb_op_eq_ggl(baryon_apuc_t *apuc,
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *pseudo_gl = &(*ggl)[section / BARYON_NUM_GROUPS];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs =
-      baryon_left_and_right(pseudo_gl, filter);
+    baryon_wordline_t *rhs = pseudo_gl;
     baryon_foreach_range(i, num_vrs, {
       baryon_vr_t *vr = vrs[i];
       baryon_wordline_t *lhs = &(*vr)[section];
       baryon_wordline_t *result = op(lhs, rhs);
+      baryon_rwinh_in_place(apuc, lhs, section, result);
       patch->updates[nth_update].vr = vr;
       patch->updates[nth_update].section = section;
       patch->updates[nth_update].update = result;
       nth_update += 1;
     });
-    baryon_free_wordline(rhs);
   });
 
   return patch;
@@ -1258,16 +1253,15 @@ void baryon_sb_op_eq_rl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
                                  baryon_binary_op_t op, baryon_rl_t *rl) {
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *wordline = &(*rl)[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs = baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *rhs = wordline;
     baryon_foreach_range(i, num_vrs, {
       baryon_vr_t *vr = vrs[i];
       baryon_wordline_t *lhs = &(*vr)[section];
       baryon_wordline_t *result = op(lhs, rhs);
+      baryon_rwinh_in_place(apuc, lhs, section, result);
       memcpy(lhs, result, BARYON_WORDLINE_SIZE);
       baryon_free_wordline(result);
     });
-    baryon_free_wordline(rhs);
   });
 }
 
@@ -1291,19 +1285,17 @@ baryon_wordline_map_t *baryon_sb_op_eq_rl(baryon_apuc_t *apuc,
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *wordline = &(*rl)[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs =
-      baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *rhs = wordline;
     baryon_foreach_range(i, num_vrs, {
       baryon_vr_t *vr = vrs[i];
       baryon_wordline_t *lhs = &(*vr)[section];
       baryon_wordline_t *result = op(lhs, rhs);
+      baryon_rwinh_in_place(apuc, lhs, section, result);
       patch->updates[nth_update].vr = vr;
       patch->updates[nth_update].section = section;
       patch->updates[nth_update].update = result;
       nth_update += 1;
     });
-    baryon_free_wordline(rhs);
   });
 
   return patch;
@@ -1481,13 +1473,13 @@ baryon_wordline_map_t * baryon_sb_cond_eq_inv_src(baryon_apuc_t *apuc,
 
 void baryon_set_rl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask, bool bit) {
   baryon_wordline_t *wordline = malloc(BARYON_WORDLINE_SIZE);
-  memset(wordline, bit, BARYON_WORDLINE_SIZE);
 
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *result = baryon_left_and_right(wordline, filter);
-    memcpy(&apuc->rl[section], result, BARYON_WORDLINE_SIZE);
-    baryon_free_wordline(result);
+    memset(wordline, bit, BARYON_WORDLINE_SIZE);
+    baryon_wordline_t *lhs = &apuc->rl[section];
+    baryon_wordline_t *result = wordline;
+    baryon_rwinh_in_place(apuc, lhs, section, result);
+    memcpy(lhs, result, BARYON_WORDLINE_SIZE);
   });
 
   baryon_free_wordline(wordline);
@@ -1507,20 +1499,18 @@ baryon_wordline_map_t *baryon_set_rl(baryon_apuc_t *apuc,
            + num_sections * sizeof(baryon_wordline_patch_t));
   patch->size = num_sections;
 
-  baryon_wordline_t *wordline = malloc(BARYON_WORDLINE_SIZE);
-  memset(wordline, bit, BARYON_WORDLINE_SIZE);
-
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *result = baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *lhs = &apuc->rl[section];
+    baryon_wordline_t *result = malloc(BARYON_WORDLINE_SIZE);
+    memset(result, bit, BARYON_WORDLINE_SIZE);
+    baryon_rwinh_in_place(apuc, lhs, section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
     nth_update += 1;
   });
 
-  baryon_free_wordline(wordline);
   return patch;
 }
 
@@ -1549,10 +1539,9 @@ void baryon_rl_op_eq_gl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
                                  baryon_binary_op_t op, baryon_gl_t *gl) {
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *lhs = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs = baryon_left_and_right(gl, filter);
+    baryon_wordline_t *rhs = gl;
     baryon_wordline_t *result = op(lhs, rhs);
-    baryon_free_wordline(rhs);
+    baryon_rwinh_in_place(apuc, lhs, section, result);
     memcpy(lhs, result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
   });
@@ -1576,10 +1565,9 @@ baryon_wordline_map_t *baryon_rl_op_eq_gl(baryon_apuc_t *apuc,
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *lhs = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs = baryon_left_and_right(gl, filter);
+    baryon_wordline_t *rhs = gl;
     baryon_wordline_t *result = op(lhs, rhs);
-    baryon_free_wordline(rhs);
+    baryon_rwinh_in_place(apuc, lhs, section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
@@ -1594,10 +1582,9 @@ void baryon_rl_op_eq_ggl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *pseudo_gl = &(*ggl)[section / BARYON_NUM_GROUPS];
     baryon_wordline_t *lhs = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs = baryon_left_and_right(pseudo_gl, filter);
+    baryon_wordline_t *rhs = pseudo_gl;
     baryon_wordline_t *result = op(lhs, rhs);
-    baryon_free_wordline(rhs);
+    baryon_rwinh_in_place(apuc, lhs, section, result);
     memcpy(lhs, result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
   });
@@ -1622,10 +1609,9 @@ baryon_wordline_map_t *baryon_rl_op_eq_ggl(baryon_apuc_t *apuc,
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *pseudo_gl = &(*ggl)[section / BARYON_NUM_GROUPS];
     baryon_wordline_t *lhs = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs = baryon_left_and_right(pseudo_gl, filter);
+    baryon_wordline_t *rhs = pseudo_gl;
     baryon_wordline_t *result = op(lhs, rhs);
-    baryon_free_wordline(rhs);
+    baryon_rwinh_in_place(apuc, lhs, section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
@@ -1639,10 +1625,9 @@ void baryon_rl_op_eq_rl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
                                  baryon_binary_op_t op, baryon_rl_t *rl) {
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *lhs = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs = baryon_left_and_right(&(*rl)[section], filter);
+    baryon_wordline_t *rhs = &(*rl)[section];
     baryon_wordline_t *result = op(lhs, rhs);
-    baryon_free_wordline(rhs);
+    baryon_rwinh_in_place(apuc, lhs, section, result);
     memcpy(lhs, result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
   });
@@ -1666,10 +1651,9 @@ baryon_wordline_map_t *baryon_rl_op_eq_rl(baryon_apuc_t *apuc,
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *lhs = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
-    baryon_wordline_t *rhs = baryon_left_and_right(&(*rl)[section], filter);
+    baryon_wordline_t *rhs = &(*rl)[section];
     baryon_wordline_t *result = op(lhs, rhs);
-    baryon_free_wordline(rhs);
+    baryon_rwinh_in_place(apuc, lhs, section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
@@ -1858,13 +1842,12 @@ void baryon_rl_op_eq_sb_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
 
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *lhs = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *rhs = baryon_left_and_right(sbdata, filter);
+    baryon_wordline_t *rhs = sbdata;
     baryon_wordline_t *result = op(lhs, rhs);
+    baryon_rwinh_in_place(apuc, lhs, section, result);
     memcpy(lhs, result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
-    baryon_free_wordline(rhs);
   });
 
   baryon_free_wordline(sbdata);
@@ -1891,15 +1874,14 @@ baryon_wordline_map_t *baryon_rl_op_eq_sb(baryon_apuc_t *apuc,
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *lhs = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *rhs = baryon_left_and_right(sbdata, filter);
+    baryon_wordline_t *rhs = sbdata;
     baryon_wordline_t *result = op(lhs, rhs);
+    baryon_rwinh_in_place(apuc, lhs, section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
     nth_update += 1;
-    baryon_free_wordline(rhs);
   });
 
   baryon_free_wordline(sbdata);
@@ -1961,16 +1943,14 @@ void baryon_rl_op_eq_sb_and_gl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
 
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *nth1 = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *nth2 = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *nth3 = baryon_left_and_right(gl, filter);
+    baryon_wordline_t *nth2 = sbdata;
+    baryon_wordline_t *nth3 = gl;
     baryon_wordline_t *result =
       baryon_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    baryon_rwinh_in_place(apuc, nth1, section, result);
     memcpy(nth1, result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
-    baryon_free_wordline(nth2);
-    baryon_free_wordline(nth3);
   });
 
   baryon_free_wordline(sbdata);
@@ -1996,18 +1976,16 @@ baryon_rl_op_eq_sb_and_gl(baryon_apuc_t *apuc, baryon_sm_t mask,
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *nth1 = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *nth2 = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *nth3 = baryon_left_and_right(gl, filter);
+    baryon_wordline_t *nth2 = sbdata;
+    baryon_wordline_t *nth3 = gl;
     baryon_wordline_t *result =
       baryon_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    baryon_rwinh_in_place(apuc, nth1, section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
     nth_update += 1;
-    baryon_free_wordline(nth2);
-    baryon_free_wordline(nth3);
   });
 
   baryon_free_wordline(sbdata);
@@ -2023,17 +2001,15 @@ void baryon_rl_op_eq_sb_and_ggl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
 
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *nth1 = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *pseudo_gl = &(*ggl)[section / BARYON_NUM_GROUPS];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *nth2 = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *nth3 = baryon_left_and_right(pseudo_gl, filter);
+    baryon_wordline_t *nth2 = sbdata;
+    baryon_wordline_t *nth3 = pseudo_gl;
     baryon_wordline_t *result =
       baryon_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    baryon_rwinh_in_place(apuc, nth1, section, result);
     memcpy(nth1, result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
-    baryon_free_wordline(nth2);
-    baryon_free_wordline(nth3);
   });
 
   baryon_free_wordline(sbdata);
@@ -2059,19 +2035,17 @@ baryon_rl_op_eq_sb_and_ggl(baryon_apuc_t *apuc, baryon_sm_t mask,
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *nth1 = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *pseudo_gl = &(*ggl)[section / BARYON_NUM_GROUPS];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *nth2 = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *nth3 = baryon_left_and_right(pseudo_gl, filter);
+    baryon_wordline_t *nth2 = sbdata;
+    baryon_wordline_t *nth3 = pseudo_gl;
     baryon_wordline_t *result =
       baryon_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    baryon_rwinh_in_place(apuc, nth1, section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
     nth_update += 1;
-    baryon_free_wordline(nth2);
-    baryon_free_wordline(nth3);
   });
 
   baryon_free_wordline(sbdata);
@@ -2087,17 +2061,15 @@ void baryon_rl_op_eq_sb_and_rl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
 
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *nth1 = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *wordline = &(*rl)[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *nth2 = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *nth3 = baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *nth2 = sbdata;
+    baryon_wordline_t *nth3 = wordline;
     baryon_wordline_t *result =
       baryon_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    baryon_rwinh_in_place(apuc, nth1, section, result);
     memcpy(nth1, result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
-    baryon_free_wordline(nth2);
-    baryon_free_wordline(nth3);
   });
 
   baryon_free_wordline(sbdata);
@@ -2123,19 +2095,17 @@ baryon_rl_op_eq_sb_and_rl(baryon_apuc_t *apuc, baryon_sm_t mask,
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *nth1 = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *wordline = &(*rl)[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *nth2 = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *nth3 = baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *nth2 = sbdata;
+    baryon_wordline_t *nth3 = wordline;
     baryon_wordline_t *result =
       baryon_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    baryon_rwinh_in_place(apuc, nth1, section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
     nth_update += 1;
-    baryon_free_wordline(nth2);
-    baryon_free_wordline(nth3);
   });
 
   baryon_free_wordline(sbdata);
@@ -2159,17 +2129,15 @@ void baryon_rl_op_eq_sb_and_rsp16_in_place(baryon_apuc_t *apuc,
 
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *nth1 = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *wordline = &(*filtered_brsp16)[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *nth2 = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *nth3 = baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *nth2 = sbdata;
+    baryon_wordline_t *nth3 = wordline;
     baryon_wordline_t *result =
       baryon_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    baryon_rwinh_in_place(apuc, nth1, section, result);
     memcpy(nth1, result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
-    baryon_free_wordline(nth2);
-    baryon_free_wordline(nth3);
   });
 
   baryon_free_vr(filtered_brsp16);
@@ -2204,19 +2172,17 @@ baryon_rl_op_eq_sb_and_rsp16(baryon_apuc_t *apuc, baryon_sm_t mask,
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
     baryon_wordline_t *nth1 = &apuc->rl[section];
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *wordline = &(*filtered_brsp16)[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *nth2 = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *nth3 = baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *nth2 = sbdata;
+    baryon_wordline_t *nth3 = wordline;
     baryon_wordline_t *result =
       baryon_ternary_expr(apuc, nth1, nth2, nth3, op1, op2);
+    baryon_rwinh_in_place(apuc, nth1, section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
     nth_update += 1;
-    baryon_free_wordline(nth2);
-    baryon_free_wordline(nth3);
   });
 
   baryon_free_vr(filtered_brsp16);
@@ -2340,15 +2306,13 @@ void baryon_rl_from_sb_binop_gl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
   baryon_wordline_t *sbdata = malloc(sizeof(baryon_wordline_t));
 
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *lhs = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *rhs = baryon_left_and_right(gl, filter);
+    baryon_wordline_t *lhs = sbdata;
+    baryon_wordline_t *rhs = gl;
     baryon_wordline_t *result = op(lhs, rhs);
+    baryon_rwinh_in_place(apuc, &apuc->rl[section], section, result);
     memcpy(&apuc->rl[section], result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
-    baryon_free_wordline(lhs);
-    baryon_free_wordline(rhs);
   });
 
   baryon_free_wordline(sbdata);
@@ -2373,17 +2337,15 @@ baryon_rl_from_sb_binop_gl(baryon_apuc_t *apuc, baryon_sm_t mask,
 
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *lhs = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *rhs = baryon_left_and_right(gl, filter);
+    baryon_wordline_t *lhs = sbdata;
+    baryon_wordline_t *rhs = gl;
     baryon_wordline_t *result = op(lhs, rhs);
+    baryon_rwinh_in_place(apuc, &apuc->rl[section], section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
     nth_update += 1;
-    baryon_free_wordline(lhs);
-    baryon_free_wordline(rhs);
   });
 
   baryon_free_wordline(sbdata);
@@ -2397,16 +2359,14 @@ void baryon_rl_from_sb_binop_ggl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
   baryon_wordline_t *sbdata = malloc(sizeof(baryon_wordline_t));
 
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *pseudo_gl = &(*ggl)[section / BARYON_NUM_GROUPS];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *lhs = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *rhs = baryon_left_and_right(pseudo_gl, filter);
+    baryon_wordline_t *lhs = sbdata;
+    baryon_wordline_t *rhs = pseudo_gl;
     baryon_wordline_t *result = op(lhs, rhs);
+    baryon_rwinh_in_place(apuc, &apuc->rl[section], section, result);
     memcpy(&apuc->rl[section], result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
-    baryon_free_wordline(lhs);
-    baryon_free_wordline(rhs);
   });
 
   baryon_free_wordline(sbdata);
@@ -2431,18 +2391,16 @@ baryon_rl_from_sb_binop_ggl(baryon_apuc_t *apuc, baryon_sm_t mask,
 
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *pseudo_gl = &(*ggl)[section / BARYON_NUM_GROUPS];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *lhs = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *rhs = baryon_left_and_right(pseudo_gl, filter);
+    baryon_wordline_t *lhs = sbdata;
+    baryon_wordline_t *rhs = pseudo_gl;
     baryon_wordline_t *result = op(lhs, rhs);
+    baryon_rwinh_in_place(apuc, &apuc->rl[section], section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
     nth_update += 1;
-    baryon_free_wordline(lhs);
-    baryon_free_wordline(rhs);
   });
 
   baryon_free_wordline(sbdata);
@@ -2456,16 +2414,14 @@ void baryon_rl_from_sb_binop_rl_in_place(baryon_apuc_t *apuc, baryon_sm_t mask,
   baryon_wordline_t *sbdata = malloc(sizeof(baryon_wordline_t));
 
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *wordline = &(*rl)[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *lhs = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *rhs = baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *lhs = sbdata;
+    baryon_wordline_t *rhs = wordline;
     baryon_wordline_t *result = op(lhs, rhs);
+    baryon_rwinh_in_place(apuc, &apuc->rl[section], section, result);
     memcpy(&apuc->rl[section], result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
-    baryon_free_wordline(lhs);
-    baryon_free_wordline(rhs);
   });
 
   baryon_free_wordline(sbdata);
@@ -2490,18 +2446,16 @@ baryon_rl_from_sb_binop_rl(baryon_apuc_t *apuc, baryon_sm_t mask,
 
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *wordline = &(*rl)[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *lhs = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *rhs = baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *lhs = sbdata;
+    baryon_wordline_t *rhs = wordline;
     baryon_wordline_t *result = op(lhs, rhs);
+    baryon_rwinh_in_place(apuc, &apuc->rl[section], section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
     nth_update += 1;
-    baryon_free_wordline(lhs);
-    baryon_free_wordline(rhs);
   });
 
   baryon_free_wordline(sbdata);
@@ -2523,16 +2477,14 @@ void baryon_rl_from_sb_binop_rsp16_in_place(baryon_apuc_t *apuc,
   });
 
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *wordline = &(*filtered_brsp16)[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *lhs = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *rhs = baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *lhs = sbdata;
+    baryon_wordline_t *rhs = wordline;
     baryon_wordline_t *result = op(lhs, rhs);
+    baryon_rwinh_in_place(apuc, &apuc->rl[section], section, result);
     memcpy(&apuc->rl[section], result, BARYON_WORDLINE_SIZE);
     baryon_free_wordline(result);
-    baryon_free_wordline(lhs);
-    baryon_free_wordline(rhs);
   });
 
   baryon_free_vr(filtered_brsp16);
@@ -2565,18 +2517,16 @@ baryon_rl_from_sb_binop_rsp16(baryon_apuc_t *apuc, baryon_sm_t mask,
 
   size_t nth_update = 0;
   baryon_foreach_masked_section(mask, section, {
-    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
     baryon_wordline_t *wordline = &(*filtered_brsp16)[section];
     baryon_conjoin_sections_in_place(vrs, num_vrs, section, sbdata);
-    baryon_wordline_t *lhs = baryon_left_and_right(sbdata, filter);
-    baryon_wordline_t *rhs = baryon_left_and_right(wordline, filter);
+    baryon_wordline_t *lhs = sbdata;
+    baryon_wordline_t *rhs = wordline;
     baryon_wordline_t *result = op(lhs, rhs);
+    baryon_rwinh_in_place(apuc, &apuc->rl[section], section, result);
     patch->updates[nth_update].vr = &apuc->rl;
     patch->updates[nth_update].section = section;
     patch->updates[nth_update].update = result;
     nth_update += 1;
-    baryon_free_wordline(lhs);
-    baryon_free_wordline(rhs);
   });
 
   baryon_free_vr(filtered_brsp16);
@@ -2949,7 +2899,7 @@ void baryon_rwinh_rst_in_place(baryon_apuc_t *apuc, size_t mask, bool has_read) 
   }
 
   apuc->rwinh_sects &= ~mask;
-  baryon_foreach_masked_section(~apuc->rwinh_sects, section, {
+  baryon_foreach_masked_section(mask, section, {
     memset(&apuc->rwinh_filter[section], true, BARYON_WORDLINE_SIZE);
   });
 }
@@ -2964,4 +2914,17 @@ baryon_rwinh_rst_patch_t *baryon_rwinh_rst(baryon_apuc_t *apuc, size_t mask,
   patch->mask = mask;
   patch->has_read = has_read;
   return patch;
+}
+
+void baryon_rwinh_in_place(baryon_apuc_t *apuc, baryon_wordline_t *wordline,
+                           size_t section, baryon_wordline_t *result) {
+  if (apuc->rwinh_sects != 0x0000) {
+    baryon_wordline_t *filter = &apuc->rwinh_filter[section];
+    baryon_wordline_t *filtered = \
+      baryon_left_and_right_in_place(result, filter, result);
+    baryon_wordline_t *unfiltered = \
+      baryon_left_and_inv_right(wordline, filter);
+    baryon_left_or_right_in_place(filtered, unfiltered, result);
+    baryon_free_wordline(unfiltered);
+  }
 }

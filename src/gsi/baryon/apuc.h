@@ -498,6 +498,9 @@ baryon_l2_t (*baryon_reset_l2(baryon_apuc_t *apuc))[BARYON_NUM_L2_ROWS];
 void baryon_reset_lgl_in_place(baryon_apuc_t *apuc);
 baryon_lgl_t *baryon_reset_lgl(baryon_apuc_t *apuc);
 
+void baryon_rwinh_in_place(baryon_apuc_t *apuc, baryon_wordline_t *wordline,
+                           size_t section, baryon_wordline_t *result);
+
 /** [APL] RSP16 = RSP256; */
 void baryon_rsp16_from_rsp256_in_place(baryon_apuc_t *apuc);
 baryon_rsp16_t *baryon_rsp16_from_rsp256(baryon_apuc_t *apuc);
