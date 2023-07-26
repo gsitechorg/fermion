@@ -3,6 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if __linux__
+#include <sys/sysinfo.h>
+#elif __APPLE__
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#endif
+
 #include "libgdl.h"
 
 // Ours
@@ -61,6 +68,46 @@ int gdl_context_desc_get(struct gdl_context_desc *ctx_desc, unsigned int count){
     ctx_desc->mem_size = 1073741824;
     ctx_desc->hw_general_info = 0;
     return 0;
+}
+
+int gdl_context_property_get(gdl_context_handle_t ctx_handler,
+                             gdl_context_property_t property, long *value) {
+  switch (property) {
+  case GDL_CONTEXT_MEM_SIZE: {
+#ifdef __linux__
+    struct sysinfo info;
+    if (sysinfo(&info) == -1) {
+      error("failed to collect sysinfo");
+    }
+    *value = info.totalram * info.mem_unit;
+#elif __APPLE__
+    int mib[2];
+    size_t length;
+    mib[0] = CTL_HW;
+    mib[1] = HW_MEMSIZE;
+    length = sizeof(int64_t);
+    sysctl(mib, 2, value, &length, NULL, 0);
+#else
+    error("unsupported OS");
+#endif
+    break;
+  }
+  case GDL_CONTEXT_NUM_APUCS:
+    *value = 4;
+    break;
+  case GDL_CONTEXT_STATUS:
+    *value = GDL_CONTEXT_READY;
+    break;
+  case GDL_CONTEXT_NUM_APUS:
+    *value = 1;
+    break;
+  case GDL_CONTEXT_HW_GENERAL_INFO:
+    // FIXME: Fill this in ...
+    error("not implemented: GDL_CONTEXT_HW_GENERAL_INFO");
+    break;
+  default:
+    error("unsupported GDL context property");
+  }
 }
 
 // GDL Memory

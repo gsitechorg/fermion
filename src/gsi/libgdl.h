@@ -110,6 +110,8 @@ typedef enum {
 
 int gdl_context_count_get(unsigned int *count);
 int gdl_context_desc_get(struct gdl_context_desc *ctx_desc, unsigned int count);
+int gdl_context_property_get(gdl_context_handle_t ctx_handler,
+                             gdl_context_property_t property, long *value);
 int gdl_context_alloc(gdl_context_handle_t ctx_handler,
                         const unsigned long long const_mapped_size_req,
                         unsigned long long *const_mapped_size_recv,
