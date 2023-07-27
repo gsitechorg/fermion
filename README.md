@@ -665,5 +665,7 @@ Usage:
       [--clean]
 
 Examples:
-  setup.sh --prefix build/baryon-inst --enable-tests --install
+  ./setup.sh --prefix build/baryon-inst --enable-tests --install
+
+  ./setup.sh --clean --prefix ~/mambaforge/envs/ch_emulation --install
 ```
