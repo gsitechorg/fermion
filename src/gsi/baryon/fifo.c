@@ -56,8 +56,8 @@ uint32_t baryon_rd_rsp2k_reg(baryon_apuc_rsp_fifo_t *apuc_rsp_fifo,
   baryon_apc_rsp_fifo_t *apc_rsp_fifo = apuc_rsp_fifo->active;
   baryon_rsp_fifo_msg_t *rsp_fifo_msg =
     &apc_rsp_fifo->buffer[apc_rsp_fifo->cursor];
-  size_t lower_half_bank = bank_id * 2;
-  size_t upper_half_bank = lower_half_bank + 1;
+  size_t lower_half_bank = bank_id;
+  size_t upper_half_bank = lower_half_bank + 4;
   uint32_t value = (rsp_fifo_msg->rsp2k[upper_half_bank] << 16)
     | rsp_fifo_msg->rsp2k[lower_half_bank];
   return value;

@@ -44,17 +44,12 @@ const char *baryon_src_name[16] = {
   "BARYON_SRC_INV_RSP16"
 };
 
-void baryon_plats_for_bank(size_t bank, size_t *lower_plat_apc_0,
-                           size_t *upper_plat_apc_0, size_t *lower_plat_apc_1,
-                           size_t *upper_plat_apc_1) {
-  // 1 low-order and 1 high-order half-bank per APC
-  // DIRI orders low- and high-order half-banks consecutively
-  // 2 APCs per APUC
-  // .:. Need to slice 2 ranges of 2 half-banks
-  *lower_plat_apc_0 = bank * BARYON_NUM_PLATS_PER_HALF_BANK * 2;
-  *upper_plat_apc_0 = (bank + 1) * BARYON_NUM_PLATS_PER_HALF_BANK * 2;
-  *lower_plat_apc_1 = (*lower_plat_apc_0) + BARYON_NUM_PLATS_PER_APC;
-  *upper_plat_apc_1 = (*upper_plat_apc_0) + BARYON_NUM_PLATS_PER_APC;
+void baryon_plats_for_bank(size_t bank, size_t *apc_0_lo, size_t *apc_0_hi,
+                           size_t *apc_1_lo, size_t *apc_1_hi) {
+  *apc_0_lo = bank * BARYON_NUM_PLATS_PER_HALF_BANK;
+  *apc_0_hi = (*apc_0_lo) + 4 * BARYON_NUM_PLATS_PER_HALF_BANK;
+  *apc_1_lo = (*apc_0_lo) + BARYON_NUM_PLATS_PER_APC;
+  *apc_1_hi = (*apc_0_hi) + BARYON_NUM_PLATS_PER_APC;
 }
 
 void baryon_patch_whole_vr(baryon_apuc_t *apuc, baryon_vr_patch_t *patch) {
