@@ -161,24 +161,34 @@ extern "C" {
 void baryon_bank_group_row(size_t l1_addr, size_t *bank, size_t *group,
                            size_t *row);
 
-#define baryon_foreach_bank_plat(bank, lgl_plat, l1_plat, block)            \
-  {                                                                         \
-    size_t lower_plat_apc_0;                                                \
-    size_t upper_plat_apc_0;                                                \
-    size_t lower_plat_apc_1;                                                \
-    size_t upper_plat_apc_1;                                                \
-    baryon_plats_for_bank(bank, &lower_plat_apc_0, &upper_plat_apc_0,       \
-                          &lower_plat_apc_1, &upper_plat_apc_1);            \
-    size_t lgl_plat;                                                        \
-    baryon_foreach_range(l1_plat, lower_plat_apc_0, upper_plat_apc_0, {     \
-      lgl_plat = l1_plat - lower_plat_apc_0;                                \
-      block;                                                                \
-    });                                                                     \
-    baryon_foreach_range(l1_plat, lower_plat_apc_1, upper_plat_apc_1, {     \
-      lgl_plat =                                                            \
-          l1_plat - lower_plat_apc_1 + BARYON_NUM_PLATS_PER_HALF_BANK * 2;  \
-      block;                                                                \
-    });                                                                     \
+#define baryon_foreach_bank_plat(bank, lgl_plat, l1_plat, block)             \
+  {                                                                          \
+    size_t apc_0_lo;                                                         \
+    size_t apc_0_hi;                                                         \
+    size_t apc_1_lo;                                                         \
+    size_t apc_1_hi;                                                         \
+    baryon_plats_for_bank(bank, &apc_0_lo, &apc_0_hi, &apc_1_lo, &apc_1_hi); \
+    size_t lgl_plat;                                                         \
+    baryon_foreach_range(l1_plat, apc_0_lo,                                  \
+                         apc_0_lo + BARYON_NUM_PLATS_PER_HALF_BANK, {        \
+      lgl_plat = l1_plat - apc_0_lo;                                         \
+      block;                                                                 \
+    });                                                                      \
+    baryon_foreach_range(l1_plat, apc_0_hi,                                  \
+                         apc_0_hi + BARYON_NUM_PLATS_PER_HALF_BANK, {        \
+      lgl_plat = l1_plat - apc_0_hi + BARYON_NUM_PLATS_PER_HALF_BANK;        \
+      block;                                                                 \
+    });                                                                      \
+    baryon_foreach_range(l1_plat, apc_1_lo,                                  \
+                         apc_1_lo + BARYON_NUM_PLATS_PER_HALF_BANK, {        \
+      lgl_plat = l1_plat - apc_1_lo + 2 * BARYON_NUM_PLATS_PER_HALF_BANK;    \
+      block;                                                                 \
+    });                                                                      \
+    baryon_foreach_range(l1_plat, apc_1_hi,                                  \
+                         apc_1_hi + BARYON_NUM_PLATS_PER_HALF_BANK, {        \
+      lgl_plat = l1_plat - apc_1_hi + 3 * BARYON_NUM_PLATS_PER_HALF_BANK;    \
+      block;                                                                 \
+    });                                                                      \
   }
 
 #define baryon_any_plat_in_place(lhs, rhs, section, step, lower, upper)        \
@@ -395,11 +405,8 @@ typedef baryon_wordline_t *(*baryon_ternary_op_t)(baryon_wordline_t *nth1,
                                                   baryon_wordline_t *nth2,
                                                   baryon_wordline_t *nth3);
 
-void baryon_plats_for_bank(size_t bank,
-                           size_t *lower_plat_apc_0,
-                           size_t *upper_plat_apc_0,
-                           size_t *lower_plat_apc_1,
-                           size_t *upper_plat_apc_1);
+void baryon_plats_for_bank(size_t bank, size_t *apc_0_lo, size_t *apc_0_hi,
+                           size_t *apc_1_lo, size_t *apc_1_hi);
 
 void baryon_patch_whole_vr(baryon_apuc_t *apuc, baryon_vr_patch_t *patch);
 void baryon_patch_sb(baryon_apuc_t *apuc, baryon_wordline_map_t *patch);
