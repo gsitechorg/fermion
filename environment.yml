@@ -3,10 +3,11 @@ channels:
   - conda-forge
   - gsi
 dependencies:
-  - belex=1.0.0
-  - belex-libs=1.0.0
-  - rapidcheck=2023.4.13
   - cmake=3.26.4
-  - gtest=1.13.0
   - gtest-parallel=2022.06.21
+  - gtest=1.13.0
+  - open-belex-libs=1.0.0
+  - open-belex=1.0.0
+  - python=3.11
+  - rapidcheck=2023.4.13
   - yaml-cpp=0.7.0
