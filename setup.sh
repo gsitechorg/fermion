@@ -169,6 +169,7 @@ function build-baryon {
     cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
           -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
           -DBUILD_TESTS="$ENABLE_TESTS" \
+          -DCMAKE_VERBOSE_MAKEFILE=YES \
           ..
     RETURN_CODE=$?
 

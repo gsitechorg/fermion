@@ -31,6 +31,7 @@ extern "C" {
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <limits.h>
 
 #include "constants.h"
 #include "fifo.h"
@@ -80,9 +81,9 @@ extern "C" {
 
 #define baryon_foreach_wordline_plat baryon_foreach_vr_plat
 
-#define baryon_foreach_vr_section_plat(section, plat, block) \
-  baryon_foreach_vr_section(section, {                       \
-    baryon_foreach_vr_plat(plat, block);                     \
+#define baryon_foreach_vr_section_plat(section, plat, block)          \
+  baryon_foreach_vr_section(section, {                                \
+    baryon_foreach_vr_plat(plat, block);                              \
   })
 
 #define baryon_foreach_vr_row_section_plat(row, section, plat, block) \
@@ -298,6 +299,15 @@ typedef bool baryon_rsp16_section_t[BARYON_NUM_RSP16_PLATS];
   (BARYON_NUM_LGL_PLATS * sizeof(bool))
 
 typedef enum {
+  BARYON_STATUS_SUCCESS,
+  BARYON_STATUS_ERROR,
+  BARYON_STATUS_UNSUPPORTED,
+  BARYON_NUM_STATUSES
+} baryon_status_t;
+
+extern const char *baryon_status_names[BARYON_NUM_STATUSES + 1];
+
+typedef enum {
   BARYON_RSP_MODE_IDLE,
   BARYON_RSP_MODE_RSP16_READ,   // invalid APUC RSP operation
   BARYON_RSP_MODE_RSP256_READ,  // invalid APUC RSP operation
@@ -310,7 +320,7 @@ typedef enum {
   BARYON_NUM_RSP_MODES
 } baryon_rsp_mode_t;
 
-extern const char *baryon_rsp_mode_name[9];
+extern const char *baryon_rsp_mode_names[BARYON_NUM_RSP_MODES + 1];
 
 typedef struct baryon_apuc_t {
   baryon_apuc_rsp_fifo_t *apuc_rsp_fifo;
@@ -357,7 +367,7 @@ typedef enum {
   BARYON_NUM_L1_SRCS
 } baryon_l1_patch_src_t;
 
-extern const char *baryon_l1_patch_src_name[2];
+extern const char *baryon_l1_patch_src_names[BARYON_NUM_L1_SRCS + 1];
 
 typedef struct baryon_l1_patch_t {
   baryon_l1_patch_src_t src;
@@ -419,7 +429,75 @@ typedef enum {
   BARYON_NUM_SRCS
 } baryon_src_t;
 
-extern const char *baryon_src_name[16];
+extern const char *baryon_src_names[BARYON_NUM_SRCS + 1];
+
+typedef enum {
+  BARYON_GLASSIBLE_RN,  // buffer
+  BARYON_GLASSIBLE_SM,  // mask
+  BARYON_GLASSIBLE_EWE, // mask
+  BARYON_GLASSIBLE_RE,  // mask
+
+  BARYON_GLASSIBLE_L1,  // buffer
+  BARYON_GLASSIBLE_L2,  // buffer
+  BARYON_GLASSIBLE_LGL, // buffer
+
+  BARYON_GLASSIBLE_RL,    // buffer
+  BARYON_GLASSIBLE_NRL,   // buffer
+  BARYON_GLASSIBLE_ERL,   // buffer
+  BARYON_GLASSIBLE_WRL,   // buffer
+  BARYON_GLASSIBLE_SRL,   // buffer
+  BARYON_GLASSIBLE_GL,    // buffer
+  BARYON_GLASSIBLE_GGL,   // buffer
+  BARYON_GLASSIBLE_RSP16, // buffer
+
+  BARYON_GLASSIBLE_INV_RL,    // buffer
+  BARYON_GLASSIBLE_INV_NRL,   // buffer
+  BARYON_GLASSIBLE_INV_ERL,   // buffer
+  BARYON_GLASSIBLE_INV_WRL,   // buffer
+  BARYON_GLASSIBLE_INV_SRL,   // buffer
+  BARYON_GLASSIBLE_INV_GL,    // buffer
+  BARYON_GLASSIBLE_INV_GGL,   // buffer
+  BARYON_GLASSIBLE_INV_RSP16, // buffer
+
+  BARYON_GLASSIBLE_RSP256, // buffer
+  BARYON_GLASSIBLE_RSP2K,  // buffer
+  BARYON_GLASSIBLE_RSP32K, // buffer
+
+  BARYON_NUM_GLASSIBLES // length
+} baryon_glassible_t;
+
+extern const char *baryon_glassible_names[BARYON_NUM_GLASSIBLES + 1];
+
+typedef enum {
+  BARYON_GLASS_FMT_HEX,
+  BARYON_GLASS_FMT_BIN,
+  BARYON_NUM_GLASS_FMTS
+} baryon_glass_fmt_t;
+
+extern const char *baryon_glass_fmt_names[BARYON_NUM_GLASS_FMTS + 1];
+
+typedef enum {
+  BARYON_GLASS_ORDER_LSB,  // Least-Significant Bit (LSB) first
+  BARYON_GLASS_ORDER_MSB,  // Most-Significant Bit (MSB) first
+  BARYON_NUM_GLASS_ORDERS
+} baryon_glass_order_t;
+
+extern const char *baryon_glass_order_names[BARYON_NUM_GLASS_ORDERS + 1];
+
+typedef struct baryon_glass_stmt_t {
+  void *subject;
+  baryon_glassible_t subject_type;
+  char comment[1024];  // max comment size: 1024 (a long comment)
+  bool sections[BARYON_NUM_SECTIONS];
+  size_t plats[BARYON_NUM_PLATS_PER_APUC];
+  size_t num_plats;
+  baryon_glass_fmt_t fmt;
+  baryon_glass_order_t order;
+  bool balloon;
+  char rewrite[16];  // binary or hexadecimal: value:int -> rewrite:char
+  char file_path[PATH_MAX];  // limits.h
+  ssize_t line_number;
+} baryon_glass_stmt_t;
 
 typedef baryon_wordline_t *(*baryon_unary_op_t)(baryon_wordline_t *nth1);
 typedef baryon_wordline_t *(*baryon_binary_op_t)(baryon_wordline_t *nth1,
@@ -472,7 +550,10 @@ void baryon_init_lgl(baryon_lgl_t *lgl, bool value);
 void baryon_init_apuc(baryon_apuc_t *apuc,
                       baryon_apuc_rsp_fifo_t *apuc_rsp_fifo);
 
+void baryon_init_glass_stmt(baryon_glass_stmt_t *glass_stmt);
+
 void baryon_free_apuc(baryon_apuc_t *apuc);
+void baryon_free_glass_stmt(baryon_glass_stmt_t *glass_stmt);
 void baryon_free_vr(baryon_vr_t *vr);
 void baryon_free_rl(baryon_rl_t *rl);
 void baryon_free_gl(baryon_gl_t *gl);
@@ -497,6 +578,22 @@ void baryon_free_rsp_patches(baryon_rsp_patches_t *patch);
 void baryon_free_rwinh_rst_patch(baryon_rwinh_rst_patch_t *patch);
 
 void baryon_free_src(void *src, baryon_src_t src_type);
+
+baryon_status_t baryon_glass_rn(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_sm(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_ewe(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_re(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_l1(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_l2(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_lgl(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_rl(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_gl(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_ggl(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_rsp16(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_rsp256(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_rsp2k(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass_rsp32k(baryon_glass_stmt_t *glass_stmt);
+baryon_status_t baryon_glass(baryon_glass_stmt_t *glass_stmt);
 
 void baryon_reset_rl_in_place(baryon_apuc_t *apuc);
 baryon_vr_patch_t *baryon_reset_rl(baryon_apuc_t *apuc);

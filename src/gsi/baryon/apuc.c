@@ -21,14 +21,24 @@
  * SOFTWARE.
  */
 
+#include <stdio.h>
 #include <string.h>
+
+#include <log.h>
 
 #include "apuc.h"
 #include "constants.h"
 #include "fifo.h"
 #include "operations.h"
 
-const char *baryon_rsp_mode_name[9] = {
+const char *baryon_status_names[BARYON_NUM_STATUSES + 1] = {
+  "BARYON_STATUS_SUCCESS",
+  "BARYON_STATUS_ERROR",
+  "BARYON_STATUS_UNSUPPORTED",
+  "BARYON_NUM_STATUSES"
+};
+
+const char *baryon_rsp_mode_names[BARYON_NUM_RSP_MODES + 1] = {
   "BARYON_RSP_MODE_IDLE",
   "BARYON_RSP_MODE_RSP16_READ",
   "BARYON_RSP_MODE_RSP256_READ",
@@ -37,15 +47,17 @@ const char *baryon_rsp_mode_name[9] = {
   "BARYON_RSP_MODE_RSP16_WRITE",
   "BARYON_RSP_MODE_RSP256_WRITE",
   "BARYON_RSP_MODE_RSP2K_WRITE",
-  "BARYON_RSP_MODE_RSP32K_WRITE"
+  "BARYON_RSP_MODE_RSP32K_WRITE",
+  "BARYON_NUM_RSP_MODES"
 };
 
-const char *baryon_l1_patch_src_name[2] = {
+const char *baryon_l1_patch_src_names[BARYON_NUM_L1_SRCS + 1] = {
   "BARYON_L1_SRC_GGL",
-  "BARYON_L1_SRC_LGL"
+  "BARYON_L1_SRC_LGL",
+  "BARYON_NUM_L1_SRCS"
 };
 
-const char *baryon_src_name[16] = {
+const char *baryon_src_names[BARYON_NUM_SRCS + 1] = {
   "BARYON_SRC_RL",
   "BARYON_SRC_NRL",
   "BARYON_SRC_ERL",
@@ -64,7 +76,56 @@ const char *baryon_src_name[16] = {
 
   "BARYON_SRC_INV_GL",
   "BARYON_SRC_INV_GGL",
-  "BARYON_SRC_INV_RSP16"
+  "BARYON_SRC_INV_RSP16",
+
+  "BARYON_NUM_SRCS"
+};
+
+const char *baryon_glassible_names[BARYON_NUM_GLASSIBLES + 1] = {
+    "BARYON_GLASSIBLE_RN",
+    "BARYON_GLASSIBLE_SM",
+    "BARYON_GLASSIBLE_EWE",
+    "BARYON_GLASSIBLE_RE",
+
+    "BARYON_GLASSIBLE_L1",
+    "BARYON_GLASSIBLE_L2",
+    "BARYON_GLASSIBLE_LGL",
+
+    "BARYON_GLASSIBLE_RL",
+    "BARYON_GLASSIBLE_NRL",
+    "BARYON_GLASSIBLE_ERL",
+    "BARYON_GLASSIBLE_WRL",
+    "BARYON_GLASSIBLE_SRL",
+    "BARYON_GLASSIBLE_GL",
+    "BARYON_GLASSIBLE_GGL",
+    "BARYON_GLASSIBLE_RSP16",
+
+    "BARYON_GLASSIBLE_INV_RL",
+    "BARYON_GLASSIBLE_INV_NRL",
+    "BARYON_GLASSIBLE_INV_ERL",
+    "BARYON_GLASSIBLE_INV_WRL",
+    "BARYON_GLASSIBLE_INV_SRL",
+    "BARYON_GLASSIBLE_INV_GL",
+    "BARYON_GLASSIBLE_INV_GGL",
+    "BARYON_GLASSIBLE_INV_RSP16",
+
+    "BARYON_GLASSIBLE_RSP256",
+    "BARYON_GLASSIBLE_RSP2K",
+    "BARYON_GLASSIBLE_RSP32K",
+
+    "BARYON_NUM_GLASSIBLES"
+};
+
+const char *baryon_glass_fmt_names[BARYON_NUM_GLASS_FMTS + 1] = {
+    "BARYON_GLASS_FMT_HEX",
+    "BARYON_GLASS_FMT_BIN",
+    "BARYON_NUM_GLASS_FMTS"
+};
+
+const char *baryon_glass_order_names[BARYON_NUM_GLASS_ORDERS + 1] = {
+  "BARYON_GLASS_ORDER_LSB",
+  "BARYON_GLASS_ORDER_MSB",
+  "BARYON_NUM_GLASS_ORDERS"
 };
 
 void baryon_plats_for_bank(size_t bank, size_t *apc_0_lo, size_t *apc_0_hi,
@@ -318,9 +379,31 @@ void baryon_init_apuc(baryon_apuc_t *apuc,
   apuc->rwinh_sects = 0x0000;
 }
 
+void baryon_init_glass_stmt(baryon_glass_stmt_t *glass_stmt) {
+  glass_stmt->subject = NULL;
+  glass_stmt->subject_type = BARYON_NUM_GLASSIBLES;
+  glass_stmt->comment[0] = '\0';
+  memset(&glass_stmt->sections, false, BARYON_NUM_SECTIONS * sizeof(bool));
+  glass_stmt->num_plats = 0;
+  glass_stmt->fmt = BARYON_NUM_GLASS_FMTS;
+  glass_stmt->order = BARYON_NUM_GLASS_ORDERS;
+  glass_stmt->balloon = true;
+  for (int i = 0; i < 16; i += 1) {
+    sprintf(&glass_stmt->rewrite[i], "%d", i);
+  }
+  glass_stmt->file_path[0] = '\0';
+  glass_stmt->line_number = -1;
+}
+
 void baryon_free_apuc(baryon_apuc_t *apuc) {
   if (apuc != NULL) {
     free(apuc);
+  }
+}
+
+void baryon_free_glass_stmt(baryon_glass_stmt_t *glass_stmt) {
+  if (glass_stmt != NULL) {
+    free(glass_stmt);
   }
 }
 
@@ -475,6 +558,175 @@ void baryon_free_rsp_patches(baryon_rsp_patches_t *patch) {
 void baryon_free_rwinh_rst_patch(baryon_rwinh_rst_patch_t *patch) {
   if (patch != NULL) {
     free(patch);
+  }
+}
+
+baryon_status_t baryon_glass_rn(baryon_glass_stmt_t *glass_stmt) {
+  baryon_vr_t *vr = (baryon_vr_t *)glass_stmt->subject;
+  switch (glass_stmt->fmt) {
+  case BARYON_GLASS_FMT_HEX:
+    switch (glass_stmt->order) {
+    case BARYON_GLASS_ORDER_LSB: {
+      baryon_foreach_range(nibble_index, 4, {
+        size_t lower_section = nibble_index * 4;
+        size_t upper_section = lower_section + 4;
+        baryon_foreach_range(plat_index, glass_stmt->num_plats, {
+          size_t plat = glass_stmt->plats[plat_index];
+          size_t nibble = 0x0;
+          baryon_foreach_range(section, lower_section, upper_section, {
+            nibble |= (*vr)[section][plat] << (section - lower_section);
+          });
+          printf("%c", glass_stmt->rewrite[nibble]);
+          if (plat_index + 1 < glass_stmt->num_plats) {
+            printf(" ");
+          }
+        });
+        printf("\n");
+      });
+      break;
+    }
+    case BARYON_GLASS_ORDER_MSB: {
+      break;
+    }
+    default:
+      log_error("Unsupported baryon_glass_order_t: %s",
+                baryon_glass_order_names[glass_stmt->order]);
+      return BARYON_STATUS_UNSUPPORTED;
+    }
+    break;
+  case BARYON_GLASS_FMT_BIN:
+    switch (glass_stmt->order) {
+    case BARYON_GLASS_ORDER_LSB: {
+      break;
+    }
+    case BARYON_GLASS_ORDER_MSB: {
+      break;
+    }
+    default:
+      log_error("Unsupported baryon_glass_order_t: %s",
+                baryon_glass_order_names[glass_stmt->order]);
+      return BARYON_STATUS_UNSUPPORTED;
+    }
+    break;
+  default:
+    log_error("Unsupported baryon_glass_fmt_t: %s",
+              baryon_glass_fmt_names[glass_stmt->fmt]);
+    return BARYON_STATUS_UNSUPPORTED;
+  }
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_sm(baryon_glass_stmt_t *glass_stmt) {
+  baryon_sm_t sm = *(baryon_sm_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_ewe(baryon_glass_stmt_t *glass_stmt) {
+  baryon_ewe_t ewe = *(baryon_ewe_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_re(baryon_glass_stmt_t *glass_stmt) {
+  baryon_re_t re = *(baryon_re_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_l1(baryon_glass_stmt_t *glass_stmt) {
+  baryon_l1_t *l1 = (baryon_l1_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_l2(baryon_glass_stmt_t *glass_stmt) {
+  baryon_l2_t *l2 = (baryon_l2_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_lgl(baryon_glass_stmt_t *glass_stmt) {
+  baryon_lgl_t *lgl = (baryon_lgl_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_rl(baryon_glass_stmt_t *glass_stmt) {
+  baryon_rl_t *rl = (baryon_rl_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_gl(baryon_glass_stmt_t *glass_stmt) {
+  baryon_gl_t *gl = (baryon_gl_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_ggl(baryon_glass_stmt_t *glass_stmt) {
+  baryon_ggl_t *ggl = (baryon_ggl_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_rsp16(baryon_glass_stmt_t *glass_stmt) {
+  baryon_rsp16_t *rsp16 = (baryon_rsp16_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_rsp256(baryon_glass_stmt_t *glass_stmt) {
+  baryon_rsp256_t *rsp256 = (baryon_rsp256_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_rsp2k(baryon_glass_stmt_t *glass_stmt) {
+  baryon_rsp2k_t *rsp2k = (baryon_rsp2k_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass_rsp32k(baryon_glass_stmt_t *glass_stmt) {
+  baryon_rsp32k_t *rsp32k = (baryon_rsp32k_t *)glass_stmt->subject;
+  return BARYON_STATUS_SUCCESS;
+}
+
+baryon_status_t baryon_glass(baryon_glass_stmt_t *glass_stmt) {
+  switch (glass_stmt->subject_type) {
+  case BARYON_GLASSIBLE_RN:
+    return baryon_glass_rn(glass_stmt);
+  case BARYON_GLASSIBLE_SM:
+    return baryon_glass_sm(glass_stmt);
+  case BARYON_GLASSIBLE_EWE:
+    return baryon_glass_ewe(glass_stmt);
+  case BARYON_GLASSIBLE_RE:
+    return baryon_glass_re(glass_stmt);
+  case BARYON_GLASSIBLE_L1:
+    return baryon_glass_l1(glass_stmt);
+  case BARYON_GLASSIBLE_L2:
+    return baryon_glass_l2(glass_stmt);
+  case BARYON_GLASSIBLE_LGL:
+    return baryon_glass_lgl(glass_stmt);
+  case BARYON_GLASSIBLE_RL:      // fallthrough
+  case BARYON_GLASSIBLE_NRL:     // fallthrough
+  case BARYON_GLASSIBLE_ERL:     // fallthrough
+  case BARYON_GLASSIBLE_WRL:     // fallthrough
+  case BARYON_GLASSIBLE_SRL:     // fallthrough
+  case BARYON_GLASSIBLE_INV_RL:  // fallthrough
+  case BARYON_GLASSIBLE_INV_NRL: // fallthrough
+  case BARYON_GLASSIBLE_INV_ERL: // fallthrough
+  case BARYON_GLASSIBLE_INV_WRL: // fallthrough
+  case BARYON_GLASSIBLE_INV_SRL:
+    return baryon_glass_rl(glass_stmt);
+  case BARYON_GLASSIBLE_GL: // fallthrough
+  case BARYON_GLASSIBLE_INV_GL:
+    return baryon_glass_gl(glass_stmt);
+  case BARYON_GLASSIBLE_GGL: // fallthrough
+  case BARYON_GLASSIBLE_INV_GGL:
+    return baryon_glass_ggl(glass_stmt);
+  case BARYON_GLASSIBLE_RSP16: // fallthrough
+  case BARYON_GLASSIBLE_INV_RSP16:
+    return baryon_glass_rsp16(glass_stmt);
+  case BARYON_GLASSIBLE_RSP256:
+    return baryon_glass_rsp256(glass_stmt);
+  case BARYON_GLASSIBLE_RSP2K:
+    return baryon_glass_rsp256(glass_stmt);
+  case BARYON_GLASSIBLE_RSP32K:
+    return baryon_glass_rsp256(glass_stmt);
+  default:
+    log_error("Unsupported subject_type for baryon_glass: %d\n",
+              glass_stmt->subject_type);
+    return BARYON_STATUS_UNSUPPORTED;
   }
 }
 
