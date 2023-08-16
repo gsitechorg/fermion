@@ -18,9 +18,7 @@ target_link_libraries(test-baryon PUBLIC
   gtest
   rapidcheck
   yaml-cpp
-  stdc++fs
   pthread
-  atomic
   m
   dl
 )
