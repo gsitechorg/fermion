@@ -27,6 +27,9 @@ baryon_apuc_rsp_fifo_t apuc_rsp_fifo;
 baryon_apuc_t apuc;
 baryon_seu_layer_t seu_layer;
 
+// Belex.glass
+baryon_glass_stmt_t glass_stmt;
+
 // Temporaries for SRC variants
 baryon_rl_t src_rl;        // (INV_)?([NEWS]_)?RL
 baryon_gl_t src_gl;        // (INV_)?GL
@@ -37,6 +40,7 @@ void baryon_init() {
   baryon_init_apuc_rsp_fifo(&apuc_rsp_fifo);
   baryon_init_apuc(&apuc, &apuc_rsp_fifo);
   baryon_init_seu_layer(&seu_layer);
+  baryon_init_glass_stmt(&glass_stmt);
 }
 
 void baryon_exit() {

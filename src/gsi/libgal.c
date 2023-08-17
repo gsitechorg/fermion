@@ -48,6 +48,36 @@ void gal_free(const void *p)
   free((void *)p);
 }
 
+static void encode_apc_for_l2t(uint16_t target[BARYON_NUM_PLATS_PER_APUC],
+                               uint16_t source[BARYON_NUM_PLATS_PER_APUC]) {
+  // Encoding scheme for GAL_L2T_MODE_64
+  for (size_t m = 0; m < 2; m += 1) {
+    for (size_t n = 0; n < 4; n += 1) {
+      for (size_t p = 0; p < BARYON_NUM_PLATS_PER_HALF_BANK; p += 1) {
+        target[m * 4 * BARYON_NUM_PLATS_PER_HALF_BANK + p * 4 + n] =
+          source[p + n * BARYON_NUM_PLATS_PER_HALF_BANK +
+                 m * BARYON_NUM_PLATS_PER_HALF_BANK * 4];
+      }
+    }
+  }
+}
+
+static void decode_apc_for_l2t(uint16_t target[BARYON_NUM_PLATS_PER_APUC],
+                               uint16_t source[BARYON_NUM_PLATS_PER_APUC]) {
+  // Decoding scheme for GAL_L2T_MODE_64
+  for (size_t m = 0; m < 2; m += 1) {
+    for (size_t n = 0; n < 4; n += 1) {
+      for (size_t p = 0; p < BARYON_NUM_PLATS_PER_HALF_BANK; p += 1) {
+        target[p + n * BARYON_NUM_PLATS_PER_HALF_BANK +
+               m * BARYON_NUM_PLATS_PER_HALF_BANK * 4] =
+          source[m * 4 * BARYON_NUM_PLATS_PER_HALF_BANK + p * 4 + n];
+      }
+    }
+  }
+}
+
+static uint16_t l2t[BARYON_NUM_PLATS_PER_APUC];
+
 void gal_fast_l2dma_l2_to_mem_start(uint32_t apc_id,
                 uint32_t num_transactions,
                 struct gal_fast_l2dma_l4_l2_transaction *transactions,
@@ -67,11 +97,12 @@ void gal_fast_l2dma_l2_to_mem_start(uint32_t apc_id,
             for (size_t l4_plat = lower_l4_plat,
                         l2_plat = apc_id * BARYON_NUM_PLATS_PER_HALF_BANK * 2;
                  l4_plat < upper_l4_plat; l4_plat += 1, l2_plat += 1) {
-              p[l4_plat] = (p[l4_plat] ^ (p[l4_plat] & (1 << section))) |
-                           (apuc.l2[l2_addr][l2_plat] << section);
+              l2t[l4_plat] = (l2t[l4_plat] ^ (l2t[l4_plat] & (1 << section))) |
+                             (apuc.l2[l2_addr][l2_plat] << section);
             }
         }
     }
+    encode_apc_for_l2t(p, l2t);
 }
 
 void gal_fast_l2dma_mem_to_l2_start(uint32_t apc_id,
@@ -80,6 +111,7 @@ void gal_fast_l2dma_mem_to_l2_start(uint32_t apc_id,
                 enum gal_l2dma_cmd_attr l2_ready_attr) {
     // TODO: this is a special case that is used in my_dma_l4_to_l2_32k()
     uint16_t *p = transactions->l4_addr;
+    decode_apc_for_l2t(l2t, p);
     for (size_t l2_byte = 0; l2_byte < 8; l2_byte += 1) {
         size_t bank = l2_byte / 2;
         size_t lower_l4_plat = (bank * BARYON_NUM_PLATS_PER_HALF_BANK * 2);
@@ -94,7 +126,7 @@ void gal_fast_l2dma_mem_to_l2_start(uint32_t apc_id,
           for (size_t l4_plat = lower_l4_plat,
                       l2_plat = apc_id * BARYON_NUM_PLATS_PER_HALF_BANK * 2;
                l4_plat < upper_l4_plat; l4_plat += 1, l2_plat += 1) {
-            apuc.l2[l2_addr][l2_plat] = (p[l4_plat] & (1 << section));
+            apuc.l2[l2_addr][l2_plat] = (l2t[l4_plat] & (1 << section));
           }
         }
     }

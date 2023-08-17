@@ -14,6 +14,7 @@ EXIT_MAKE_FAILED=4
 EXIT_INSTALL_FAILED=5
 EXIT_TEST_FAILED=6
 EXIT_RMDIR_FAILED=7
+EXIT_UNSUPPORTED_OS=8
 
 declare PRINT_HELP
 declare INSTALL_PREFIX
@@ -23,8 +24,35 @@ declare RUN_TESTS
 declare GTEST_FILTER
 declare CLEAN_BUILD
 
+declare OS
+declare OUTPUT
+
+OUTPUT="$(uname -s)"
+case "$OUTPUT" in
+    Linux*)
+        OS=Linux
+        ;;
+    Darwin*)
+        OS=MacOS
+        ;;
+    *)
+        echo "Unsupported operating system: $OUTPUT" 1>&2
+        exit $EXIT_UNSUPPORTED_OS
+        ;;
+esac
+
 BUILD_TYPE=Debug
-NUM_CORES=$(nproc)
+
+if [[ "$OS" == "Linux" ]]; then
+    NUM_CORES=$(nproc)
+elif [[ "$OS" == "MacOS" ]]; then
+    NUM_CORES=$(sysctl -n hw.ncpu)
+fi
+
+if [ -z "$NUM_CORES" ]; then
+    echo "Failed to determine the numer of CPU cores" 1>&2
+    exit $EXIT_UNSUPPORTED_OS
+fi
 
 BASEDIR="$(dirname "$0")"
 BASEDIR="$(cd "$BASEDIR"; pwd)"
