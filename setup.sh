@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ------------------------------------------------------------------------------
+# By Dylon Edwards
 
 shopt -s nocasematch
 if [[ "$DEBUG_MODE" =~ ^(true|yes|on|1)$ ]]; then

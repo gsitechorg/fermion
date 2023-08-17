@@ -1,3 +1,6 @@
+/* By Dylon Edwards
+ */
+
 #include <gtest/gtest.h>
 
 #include <rapidcheck/gtest.h>
