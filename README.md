@@ -1,5 +1,7 @@
 # Baryon Simulator
 
+Native (C) simulators for the Bit-Engine Language of Expressions (Belex) of GSI's APU.
+
 ## Initializing the Environment
 
 ```shell
